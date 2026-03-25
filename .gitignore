@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Webots tijdelijke bestanden
+*.wbt~
+
+# Node / frontend
+node_modules/
+dist/
+
+# Environment files
+.env
