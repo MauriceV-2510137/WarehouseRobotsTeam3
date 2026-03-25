@@ -1,10 +1,10 @@
 # Warehouse Robots
 
-Software voor autonome magazijnrobots.
+Software for autonomous warehouse robots.
 
-## Structuur
+## Structure
 
-- `robots/` - Robot software modules (navigatie, taakbeheer, sensoren)
-- `server/` - Centrale server / task queue en API
-- `webapp/` - Webinterface voor queue management en monitoring
-- `simulations/` - Webots simulaties
+- `robots/` - Robot software modules (navigation, task management, sensors)
+- `server/` - Central server / task queue and API
+- `webapp/` - Web interface for queue management and monitoring
+- `simulations/` - Webots simulations
