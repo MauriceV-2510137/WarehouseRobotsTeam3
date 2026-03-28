@@ -12,8 +12,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation -0.3129431208179993 0.31437106751972627 0.896235144947574 1.6649870414826624
-  position 0.04794741682099516 -12.08375099175161 9.92665241697933
+  orientation -0.3092760620994754 0.6367138022480007 0.7063595765891019 1.1940214868564496
+  position -6.086708578051705 -8.022430958844229 11.366326610405297
 }
 Background {
   skyColor [
@@ -111,69 +111,23 @@ DEF WALL_E Solid {
     size 0.1 8 1
   }
 }
-DEF SHELF_A0S0 WoodenBox {
-  translation -2 1 0.3
-  name "shelf_a0s0"
-  size 0.6 0.4 0.6
-}
-DEF SHELF_A0S1 WoodenBox {
-  translation -2 2 0.3
-  name "shelf_a0s1"
-  size 0.6 0.4 0.6
-}
 DEF SHELF_A0S2 WoodenBox {
-  translation -2 3 0.3
+  translation -2 2.3 0.3
   name "shelf_a0s2"
   size 0.6 0.4 0.6
 }
-DEF SHELF_A1S0 WoodenBox {
-  translation 0 1 0.3
-  name "shelf_a1s0"
-  size 0.6 0.4 0.6
-}
-DEF SHELF_A1S1 WoodenBox {
-  translation 0 2 0.3
-  name "shelf_a1s1"
-  size 0.6 0.4 0.6
-}
 DEF SHELF_A1S2 WoodenBox {
-  translation 0 3 0.3
+  translation 0 2.3 0.3
   name "shelf_a1s2"
   size 0.6 0.4 0.6
 }
-DEF SHELF_A2S0 WoodenBox {
-  translation 2 1 0.3
-  name "shelf_a2s0"
-  size 0.6 0.4 0.6
-}
-DEF SHELF_A2S1 WoodenBox {
-  translation 2 2 0.3
-  name "shelf_a2s1"
-  size 0.6 0.4 0.6
-}
 DEF SHELF_A2S2 WoodenBox {
-  translation 2 3 0.3
+  translation 2 2.3 0.3
   name "shelf_a2s2"
   size 0.6 0.4 0.6
 }
-DEF DROPOFF Solid {
-  translation 0 0 0.01
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.2 0.8 0.5
-        roughness 1
-        metalness 0
-      }
-      geometry Box {
-        size 0.8 0.8 0.01
-      }
-    }
-  ]
-  name "dropoff"
-}
 TurtleBot3Burger {
-  translation 0 -0.5 0
+  translation -0.5 -1 0
   rotation 0 0 1 1.5708
   name "robot0"
   controller "robot_controller"
@@ -190,7 +144,7 @@ TurtleBot3Burger {
   ]
 }
 TurtleBot3Burger {
-  translation 0.5 -0.5 0
+  translation 0 -1 0
   rotation 0 0 1 1.5708
   name "robot1"
   controller "robot_controller"
@@ -207,7 +161,7 @@ TurtleBot3Burger {
   ]
 }
 TurtleBot3Burger {
-  translation 1 -0.5 0
+  translation 0.5 -1 0
   rotation 0 0 1 1.5708
   name "robot2"
   controller "robot_controller"
