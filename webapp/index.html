@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Warehouse Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+<style>
+  /* ── variables ──────────────────────────────────────────────────── */
+  :root {
+    --bg:       #0d0f14;
+    --surface:  #151820;
+    --border:   #232736;
+    --accent:   #4af0b0;
+    --warn:     #f0a84a;
+    --danger:   #f04a4a;
+    --muted:    #5a6070;
+    --text:     #d8dce8;
+    --text-dim: #8890a0;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --r: 4px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: 48px 1fr;
+    grid-template-columns: 1fr;
+  }
+
+  /* ── header ────────────────────────────────────────────────────── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+  }
+  header h1 { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  #conn-status { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  #conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); transition: background .3s; }
+  #conn-dot.live { background: var(--accent); }
+
+  /* ── main layout ────────────────────────────────────────────────── */
+  main {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    grid-template-rows: 1fr;
+    gap: 0;
+    height: calc(100vh - 48px);
+    overflow: hidden;
+  }
+
+  /* ── sidebar ────────────────────────────────────────────────────── */
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 16px 20px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── add item form ──────────────────────────────────────────────── */
+  #add-form {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #add-form .row { display: flex; gap: 8px; }
+  label { font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px; }
+  input[type=text], input[type=number] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus { border-color: var(--accent); }
+  button {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--r);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: opacity .15s;
+    width: 100%;
+  }
+  button:hover { opacity: .85; }
+  button:disabled { opacity: .4; cursor: default; }
+
+  /* ── queue list ────────────────────────────────────────────────── */
+  #queue-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+  }
+  .queue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--r);
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+    animation: fadeIn .2s ease;
+  }
+  .queue-item.assigned { border-color: var(--accent); opacity: .6; }
+  .item-icon { font-size: 18px; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-loc  { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+  .item-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .item-badge.assigned { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+  .empty-msg { color: var(--muted); font-size: 12px; text-align: center; padding: 24px 0; font-family: var(--mono); }
+
+  /* ── right panel: robots ────────────────────────────────────────── */
+  #robot-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #robot-grid {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    overflow-y: auto;
+    align-content: start;
+  }
+
+  .robot-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    transition: border-color .2s;
+    animation: fadeIn .25s ease;
+  }
+  .robot-card:hover { border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+
+  .robot-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .robot-icon { font-size: 22px; }
+  .robot-id { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+  .robot-status-pill {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .status-idle              { background: color-mix(in srgb, var(--muted)   20%, transparent); color: var(--muted); }
+  .status-moving_to_shelf   { background: color-mix(in srgb, var(--accent)  15%, transparent); color: var(--accent); }
+  .status-picking           { background: color-mix(in srgb, var(--warn)    15%, transparent); color: var(--warn); }
+  .status-returning         { background: color-mix(in srgb, var(--accent)  10%, transparent); color: color-mix(in srgb, var(--accent) 70%, white); }
+  .status-waiting_for_aisle { background: color-mix(in srgb, var(--warn)    20%, transparent); color: var(--warn); }
+  .status-offline           { background: color-mix(in srgb, var(--danger)  15%, transparent); color: var(--danger); }
+
+  .robot-rows { display: flex; flex-direction: column; gap: 6px; }
+  .robot-row { display: flex; justify-content: space-between; font-size: 12px; }
+  .robot-row .label { color: var(--text-dim); }
+  .robot-row .value { font-family: var(--mono); font-size: 11px; color: var(--text); }
+
+  /* ── map panel ──────────────────────────────────────────────────── */
+  #map-panel {
+    border-top: 1px solid var(--border);
+    padding: 12px 20px 16px;
+    flex-shrink: 0;
+  }
+  #map-panel .panel-title { padding: 0 0 10px; border: none; }
+  #warehouse-map {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    width: 100%;
+    height: 180px;
+  }
+
+  /* ── misc ───────────────────────────────────────────────────────── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⬡ Warehouse Control</h1>
+  <div id="conn-status">
+    <div id="conn-dot"></div>
+    <span id="conn-label">Connecting…</span>
+  </div>
+</header>
+
+<main>
+  <!-- ── left sidebar ── -->
+  <aside>
+    <div class="panel-title">Add item to queue</div>
+
+    <div id="add-form">
+      <div>
+        <label>Item name</label>
+        <input type="text" id="inp-item" placeholder="e.g. Widget A" autocomplete="off" />
+      </div>
+      <div class="row">
+        <div style="flex:1">
+          <label>Aisle (0–2)</label>
+          <input type="number" id="inp-aisle" min="0" max="2" value="0" />
+        </div>
+        <div style="flex:1">
+          <label>Shelf (0–2)</label>
+          <input type="number" id="inp-shelf" min="0" max="2" value="0" />
+        </div>
+      </div>
+      <button id="btn-add">+ Add to queue</button>
+    </div>
+
+    <div class="panel-title" style="border-top:1px solid var(--border)">
+      Queue <span id="queue-count" style="color:var(--accent)"></span>
+    </div>
+    <div id="queue-list">
+      <div class="empty-msg" id="queue-empty">Queue is empty</div>
+    </div>
+  </aside>
+
+  <!-- ── right panel ── -->
+  <section id="robot-panel">
+    <div class="panel-title" style="padding:16px 20px 10px; border-bottom:1px solid var(--border)">Robots</div>
+    <div id="robot-grid"></div>
+
+    <div id="map-panel">
+      <div class="panel-title">Warehouse map</div>
+      <canvas id="warehouse-map"></canvas>
+    </div>
+  </section>
+</main>
+
+<script>
+// ── WebSocket connection ─────────────────────────────────────────────────
+const SERVER = `ws://${location.hostname}:8000/ws/ui`;
+let ws, state = { robots: {}, queue: [], aisle_locks: {} };
+let reconnectTimer;
+
+function connect() {
+  ws = new WebSocket(SERVER);
+
+  ws.onopen = () => {
+    document.getElementById('conn-dot').classList.add('live');
+    document.getElementById('conn-label').textContent = 'Live';
+    clearTimeout(reconnectTimer);
+  };
+
+  ws.onmessage = ({ data }) => {
+    const msg = JSON.parse(data);
+    if (msg.event === 'state_update') {
+      state = msg.data;
+      render();
+    }
+  };
+
+  ws.onclose = () => {
+    document.getElementById('conn-dot').classList.remove('live');
+    document.getElementById('conn-label').textContent = 'Reconnecting…';
+    reconnectTimer = setTimeout(connect, 2000);
+  };
+  ws.onerror = () => ws.close();
+}
+connect();
+
+// ── add item ─────────────────────────────────────────────────────────────
+document.getElementById('btn-add').addEventListener('click', () => {
+  const name  = document.getElementById('inp-item').value.trim();
+  const aisle = parseInt(document.getElementById('inp-aisle').value);
+  const shelf = parseInt(document.getElementById('inp-shelf').value);
+  if (!name) { document.getElementById('inp-item').focus(); return; }
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ event: 'add_item', data: { item_name: name, aisle, shelf } }));
+    document.getElementById('inp-item').value = '';
+  }
+});
+
+document.getElementById('inp-item').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-add').click();
+});
+
+// ── render ───────────────────────────────────────────────────────────────
+function render() {
+  renderQueue();
+  renderRobots();
+  renderMap();
+}
+
+function renderQueue() {
+  const list  = document.getElementById('queue-list');
+  const empty = document.getElementById('queue-empty');
+  const count = document.getElementById('queue-count');
+
+  const items = state.queue || [];
+  count.textContent = items.length ? `(${items.length})` : '';
+
+  // remove old cards (keep empty msg)
+  [...list.querySelectorAll('.queue-item')].forEach(el => el.remove());
+
+  if (items.length === 0) {
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  items.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'queue-item' + (t.assigned_to ? ' assigned' : '');
+    el.innerHTML = `
+      <span class="item-icon">📦</span>
+      <div class="item-info">
+        <div class="item-name">${esc(t.item_name)}</div>
+        <div class="item-loc">aisle ${t.aisle} · shelf ${t.shelf}</div>
+      </div>
+      <span class="item-badge ${t.assigned_to ? 'assigned' : ''}">${t.assigned_to ? esc(t.assigned_to) : 'queued'}</span>
+    `;
+    list.appendChild(el);
+  });
+}
+
+function renderRobots() {
+  const grid = document.getElementById('robot-grid');
+  const robots = state.robots || {};
+  const ids = Object.keys(robots);
+
+  // add / update cards
+  ids.forEach(id => {
+    const r = robots[id];
+    let card = document.getElementById(`robot-${id}`);
+    if (!card) {
+      card = document.createElement('div');
+      card.className = 'robot-card';
+      card.id = `robot-${id}`;
+      grid.appendChild(card);
+    }
+    const st = r.status;
+    const pos = r.position;
+    const task = r.current_task || '—';
+    card.innerHTML = `
+      <div class="robot-header">
+        <span class="robot-icon">🤖</span>
+        <span class="robot-id">${esc(id)}</span>
+        <span class="robot-status-pill status-${st}">${st.replace(/_/g,' ')}</span>
+      </div>
+      <div class="robot-rows">
+        <div class="robot-row"><span class="label">Task</span><span class="value">${esc(task)}</span></div>
+        <div class="robot-row"><span class="label">Position</span><span class="value">${fmt(pos.x)}, ${fmt(pos.y)}</span></div>
+        <div class="robot-row"><span class="label">Aisle lock</span><span class="value">${r.aisle_reserved !== null && r.aisle_reserved !== undefined ? r.aisle_reserved : '—'}</span></div>
+      </div>
+    `;
+  });
+
+  // remove stale cards
+  [...grid.querySelectorAll('.robot-card')].forEach(card => {
+    const id = card.id.replace('robot-', '');
+    if (!robots[id]) card.remove();
+  });
+}
+
+// ── warehouse map ────────────────────────────────────────────────────────
+// Simple top-down 2-D schematic — not a real map, just a visual aid.
+const WORLD_X = [-3.5, 3.5];   // world x range shown
+const WORLD_Y = [-0.5, 4.5];   // world y range shown
+
+// Shelf positions matching robot_controller.py
+const SHELVES = [
+  {aisle:0, shelf:0, x:-2, y:1}, {aisle:0, shelf:1, x:-2, y:2}, {aisle:0, shelf:2, x:-2, y:3},
+  {aisle:1, shelf:0, x: 0, y:1}, {aisle:1, shelf:1, x: 0, y:2}, {aisle:1, shelf:2, x: 0, y:3},
+  {aisle:2, shelf:0, x: 2, y:1}, {aisle:2, shelf:1, x: 2, y:2}, {aisle:2, shelf:2, x: 2, y:3},
+];
+const HOME_DROP = {x: 0, y: -0.2};
+
+function renderMap() {
+  const canvas = document.getElementById('warehouse-map');
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  if (W === 0 || H === 0) return;
+  canvas.width  = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+  const toCanvas = (wx, wy) => ({
+    cx: (wx - WORLD_X[0]) / (WORLD_X[1] - WORLD_X[0]) * W,
+    cy: H - (wy - WORLD_Y[0]) / (WORLD_Y[1] - WORLD_Y[0]) * H,
+  });
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = '#1e2230'; ctx.lineWidth = 1;
+  for (let gx = Math.ceil(WORLD_X[0]); gx <= WORLD_X[1]; gx++) {
+    const {cx} = toCanvas(gx, 0);
+    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+  }
+  for (let gy = Math.ceil(WORLD_Y[0]); gy <= WORLD_Y[1]; gy++) {
+    const {cy} = toCanvas(0, gy);
+    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+  }
+
+  // Aisle lock highlights
+  const locks = state.aisle_locks || {};
+  const aisleXMap = {0:-2, 1:0, 2:2};
+  Object.keys(locks).forEach(aisleStr => {
+    const ax = aisleXMap[aisleStr];
+    if (ax === undefined) return;
+    const {cx: x0} = toCanvas(ax - 0.35, 0);
+    const {cx: x1} = toCanvas(ax + 0.35, 0);
+    const {cy: y0} = toCanvas(0, WORLD_Y[1]);
+    const {cy: y1} = toCanvas(0, WORLD_Y[0]);
+    ctx.fillStyle = 'rgba(240,168,74,0.07)';
+    ctx.fillRect(x0, y0, x1-x0, y1-y0);
+    ctx.strokeStyle = 'rgba(240,168,74,0.3)'; ctx.lineWidth = 1;
+    ctx.strokeRect(x0, y0, x1-x0, y1-y0);
+  });
+
+  // Shelves
+  SHELVES.forEach(s => {
+    const {cx, cy} = toCanvas(s.x, s.y);
+    ctx.fillStyle = '#232736';
+    ctx.strokeStyle = '#3a4060'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(cx-10, cy-6, 20, 12, 2);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#5a6070';
+    ctx.font = '8px IBM Plex Mono, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`A${s.aisle}S${s.shelf}`, cx, cy);
+  });
+
+  // Drop-off zone
+  const {cx: hcx, cy: hcy} = toCanvas(HOME_DROP.x, HOME_DROP.y);
+  ctx.strokeStyle = '#4af0b080'; ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.arc(hcx, hcy, 14, 0, Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#4af0b040';
+  ctx.beginPath(); ctx.arc(hcx, hcy, 14, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#4af0b0'; ctx.font = '8px IBM Plex Sans, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('DROP', hcx, hcy);
+
+  // Robots
+  const robotColors = ['#4af0b0','#f0a84a','#a04af0','#f04a4a'];
+  const robotList = Object.values(state.robots || {});
+  robotList.forEach((r, i) => {
+    if (r.status === 'offline') return;
+    const {cx, cy} = toCanvas(r.position.x, r.position.y);
+    const col = robotColors[i % robotColors.length];
+    ctx.fillStyle = col + 'cc';
+    ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI*2); ctx.fill();
+    // heading arrow
+    const hdx = Math.cos(r.position.theta || 0) * 10;
+    const hdy = -Math.sin(r.position.theta || 0) * 10;
+    ctx.strokeStyle = col; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx+hdx, cy+hdy); ctx.stroke();
+    ctx.fillStyle = '#0d0f14';
+    ctx.font = 'bold 7px IBM Plex Mono, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(r.robot_id ? r.robot_id.slice(-1) : i, cx, cy);
+  });
+}
+
+window.addEventListener('resize', renderMap);
+
+// ── helpers ──────────────────────────────────────────────────────────────
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => (typeof n === 'number' ? n.toFixed(2) : n);
+</script>
+</body>
+</html>

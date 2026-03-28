@@ -1,0 +1,225 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/robotis/turtlebot/protos/TurtleBot3Burger.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/factory/containers/protos/WoodenBox.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/robotis/protos/RobotisLds01.proto"
+
+WorldInfo {
+  title "Warehouse"
+  defaultDamping Damping {
+    linear 0.5
+    angular 0.5
+  }
+}
+Viewpoint {
+  orientation -0.3129431208179993 0.31437106751972627 0.896235144947574 1.6649870414826624
+  position 0.04794741682099516 -12.08375099175161 9.92665241697933
+}
+Background {
+  skyColor [
+    0.15 0.15 0.2
+  ]
+}
+DirectionalLight {
+  direction 0 -1 -0.3
+  intensity 0.8
+  castShadows TRUE
+}
+DEF FLOOR Solid {
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.18 0.18 0.22
+        roughness 0.9
+        metalness 0
+      }
+      geometry Plane {
+        size 12 8
+      }
+    }
+  ]
+  name "floor"
+  boundingObject Plane {
+    size 12 8
+  }
+}
+DEF WALL_N Solid {
+  translation 0 4 0.5
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.3 0.35
+      }
+      geometry Box {
+        size 12 0.1 1
+      }
+    }
+  ]
+  name "wall_north"
+  boundingObject Box {
+    size 12 0.1 1
+  }
+}
+DEF WALL_S Solid {
+  translation 0 -4 0.5
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.3 0.35
+      }
+      geometry Box {
+        size 12 0.1 1
+      }
+    }
+  ]
+  name "wall_south"
+  boundingObject Box {
+    size 12 0.1 1
+  }
+}
+DEF WALL_W Solid {
+  translation -6 0 0.5
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.3 0.35
+      }
+      geometry Box {
+        size 0.1 8 1
+      }
+    }
+  ]
+  name "wall_west"
+  boundingObject Box {
+    size 0.1 8 1
+  }
+}
+DEF WALL_E Solid {
+  translation 6 0 0.5
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.3 0.35
+      }
+      geometry Box {
+        size 0.1 8 1
+      }
+    }
+  ]
+  name "wall_east"
+  boundingObject Box {
+    size 0.1 8 1
+  }
+}
+DEF SHELF_A0S0 WoodenBox {
+  translation -2 1 0.3
+  name "shelf_a0s0"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A0S1 WoodenBox {
+  translation -2 2 0.3
+  name "shelf_a0s1"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A0S2 WoodenBox {
+  translation -2 3 0.3
+  name "shelf_a0s2"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A1S0 WoodenBox {
+  translation 0 1 0.3
+  name "shelf_a1s0"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A1S1 WoodenBox {
+  translation 0 2 0.3
+  name "shelf_a1s1"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A1S2 WoodenBox {
+  translation 0 3 0.3
+  name "shelf_a1s2"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A2S0 WoodenBox {
+  translation 2 1 0.3
+  name "shelf_a2s0"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A2S1 WoodenBox {
+  translation 2 2 0.3
+  name "shelf_a2s1"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A2S2 WoodenBox {
+  translation 2 3 0.3
+  name "shelf_a2s2"
+  size 0.6 0.4 0.6
+}
+DEF DROPOFF Solid {
+  translation 0 0 0.01
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.2 0.8 0.5
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 0.8 0.8 0.01
+      }
+    }
+  ]
+  name "dropoff"
+}
+TurtleBot3Burger {
+  translation 0 -0.5 0
+  rotation 0 0 1 1.5708
+  name "robot0"
+  controller "robot_controller"
+  customData "ws://localhost:8000"
+  extensionSlot [
+    Compass {
+      name "robot_compass"
+    }
+    GPS {
+      name "robot_gps"
+    }
+    RobotisLds01 {
+    }
+  ]
+}
+TurtleBot3Burger {
+  translation 0.5 -0.5 0
+  rotation 0 0 1 1.5708
+  name "robot1"
+  controller "robot_controller"
+  customData "ws://localhost:8000"
+  extensionSlot [
+    Compass {
+      name "robot_compass"
+    }
+    GPS {
+      name "robot_gps"
+    }
+    RobotisLds01 {
+    }
+  ]
+}
+TurtleBot3Burger {
+  translation 1 -0.5 0
+  rotation 0 0 1 1.5708
+  name "robot2"
+  controller "robot_controller"
+  customData "ws://localhost:8000"
+  extensionSlot [
+    Compass {
+      name "robot_compass"
+    }
+    GPS {
+      name "robot_gps"
+    }
+    RobotisLds01 {
+    }
+  ]
+}
