@@ -1,5 +1,5 @@
-from src.core.odometry import OdometryEstimator
-from src.core.navigator import Navigator
+from core.odometry import OdometryEstimator
+from core.navigator import Navigator
 
 class Robot:
     def __init__(self, motion_controller, sensors):

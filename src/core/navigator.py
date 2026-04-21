@@ -1,5 +1,5 @@
 import math
-from src.core.pose import Pose
+from core.pose import Pose
 
 class Navigator:
     def __init__(self, position_tolerance=0.1, angle_tolerance=0.05):

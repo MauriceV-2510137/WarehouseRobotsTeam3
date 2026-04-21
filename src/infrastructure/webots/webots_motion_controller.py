@@ -1,4 +1,4 @@
-from src.interfaces.motion_controller import MotionController
+from interfaces.motion_controller import MotionController
 
 class WebotsMotionController(MotionController):
     def __init__(self, hardware):

@@ -1,3 +1,4 @@
+
 class SensorsController:
     def get_scan(self):
         raise NotImplementedError

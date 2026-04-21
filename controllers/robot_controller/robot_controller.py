@@ -1,15 +1,9 @@
-import sys
-import os
-
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.append(PROJECT_ROOT)
-
 from controller import Robot as WebotsRobot
 
-from src.infrastructure.webots.webots_hardware import WebotsHardware
-from src.infrastructure.webots.webots_motion_controller import WebotsMotionController
-from src.infrastructure.webots.webots_sensors_controller import WebotsSensorsController
-from src.core.robot import Robot
+from core.robot import Robot
+from infrastructure.webots.webots_hardware import WebotsHardware
+from infrastructure.webots.webots_motion_controller import WebotsMotionController
+from infrastructure.webots.webots_sensors_controller import WebotsSensorsController
 
 # --- Webots setup ---
 webots_robot = WebotsRobot()

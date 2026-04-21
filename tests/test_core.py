@@ -1,10 +1,10 @@
-# tests/test_core.py
 import math
 import pytest
-from src.core.pose import Pose
-from src.core.odometry import OdometryEstimator
-from src.core.navigator import Navigator
-from src.core.robot import Robot
+
+from core.pose import Pose
+from core.odometry import OdometryEstimator
+from core.navigator import Navigator
+from core.robot import Robot
 
 # ─────────────────────────────────────────
 # OdometryEstimator

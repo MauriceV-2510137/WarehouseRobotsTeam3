@@ -1,4 +1,4 @@
-from src.interfaces.sensors_controller import SensorsController
+from interfaces.sensors_controller import SensorsController
 
 class WebotsSensorsController(SensorsController):
     def __init__(self, hardware):

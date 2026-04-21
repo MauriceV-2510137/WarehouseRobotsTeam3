@@ -1,5 +1,5 @@
 import math
-from src.core.pose import Pose
+from core.pose import Pose
 
 WHEEL_RADIUS = 0.033   # TurtleBot3 Burger
 WHEEL_BASE   = 0.160
