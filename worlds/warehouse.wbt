@@ -1,8 +1,7 @@
 #VRML_SIM R2025a utf8
 
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/robotis/turtlebot/protos/TurtleBot3Burger.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/factory/containers/protos/WoodenBox.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/robotis/protos/RobotisLds01.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/robotis/turtlebot/protos/TurtleBot3Burger.proto"
 
 WorldInfo {
   title "Warehouse"
@@ -12,8 +11,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation -0.3092760620994754 0.6367138022480007 0.7063595765891019 1.1940214868564496
-  position -6.086708578051705 -8.022430958844229 11.366326610405297
+  orientation -0.30047039282501387 0.3047283173952659 0.9038020776768727 1.6466992863490877
+  position 1.2753479816672921 -12.967857299964802 9.86449088311498
 }
 Background {
   skyColor [
@@ -29,7 +28,7 @@ DEF FLOOR Solid {
   children [
     Shape {
       appearance PBRAppearance {
-        baseColor 0.18 0.18 0.22
+        baseColor 0.5 0.5 0.5
         roughness 0.9
         metalness 0
       }
@@ -127,53 +126,5 @@ DEF SHELF_A2S2 WoodenBox {
   size 0.6 0.4 0.6
 }
 TurtleBot3Burger {
-  translation -0.5 -1 0
-  rotation 0 0 1 1.5708
-  name "robot0"
   controller "robot_controller"
-  customData "ws://localhost:8000"
-  extensionSlot [
-    Compass {
-      name "robot_compass"
-    }
-    GPS {
-      name "robot_gps"
-    }
-    RobotisLds01 {
-    }
-  ]
-}
-TurtleBot3Burger {
-  translation 0 -1 0
-  rotation 0 0 1 1.5708
-  name "robot1"
-  controller "robot_controller"
-  customData "ws://localhost:8000"
-  extensionSlot [
-    Compass {
-      name "robot_compass"
-    }
-    GPS {
-      name "robot_gps"
-    }
-    RobotisLds01 {
-    }
-  ]
-}
-TurtleBot3Burger {
-  translation 0.5 -1 0
-  rotation 0 0 1 1.5708
-  name "robot2"
-  controller "robot_controller"
-  customData "ws://localhost:8000"
-  extensionSlot [
-    Compass {
-      name "robot_compass"
-    }
-    GPS {
-      name "robot_gps"
-    }
-    RobotisLds01 {
-    }
-  ]
 }

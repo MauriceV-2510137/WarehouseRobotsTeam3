@@ -1,0 +1,536 @@
+
+=========================================
+FILE: controllers\robot_controller\robot_controller.py
+=========================================
+import sys
+import os
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.append(PROJECT_ROOT)
+
+from controller import Robot as WebotsRobot
+
+from src.infrastructure.webots.webots_hardware import WebotsHardware
+from src.infrastructure.webots.webots_motion_controller import WebotsMotionController
+from src.infrastructure.webots.webots_sensors_controller import WebotsSensorsController
+from src.core.robot import Robot
+
+# --- Webots setup ---
+webots_robot = WebotsRobot()
+
+hardware = WebotsHardware(webots_robot)
+motion = WebotsMotionController(hardware)
+sensors = WebotsSensorsController(hardware)
+robot = Robot(motion, sensors)
+
+timestep = hardware.get_time_step()
+
+# --- main loop ---
+while webots_robot.step(timestep) != -1:
+    robot.update()
+
+=========================================
+FILE: src\core\robot.py
+=========================================
+class Robot:
+    def __init__(self, motion_controller, sensors):
+        self.motion = motion_controller
+        self.sensors = sensors
+
+    def update(self):
+        front = self.sensors.get_front_distance()
+        left = self.sensors.get_left_distance()
+        right = self.sensors.get_right_distance()
+
+        obstacle_threshold = 0.5
+
+        if front < obstacle_threshold:
+            if left > right:
+                self.motion.rotate(0.6)   # moderate turn
+            else:
+                self.motion.rotate(-0.6)
+        else:
+            # slow down when space is tight, speed up when open
+            if front < 1.5:
+                self.motion.move_forward(0.4)  # cautious
+            else:
+                self.motion.move_forward(1.0)  # max safe speed
+
+=========================================
+FILE: src\infrastructure\webots\webots_hardware.py
+=========================================
+import math
+
+class WebotsHardware:
+    def __init__(self, robot):
+        self.robot = robot
+        self.timestep = int(robot.getBasicTimeStep())
+
+        # -------------------
+        # Actuators (motors)
+        # -------------------
+        self.left_motor = robot.getDevice("left wheel motor")
+        self.right_motor = robot.getDevice("right wheel motor")
+
+        self.left_motor.setPosition(float("inf"))
+        self.right_motor.setPosition(float("inf"))
+
+        # -------------------
+        # Hardware limits / config
+        # -------------------
+        self.max_wheel_speed = 6.28
+
+        # -------------------
+        # Sensors
+        # -------------------
+
+        # LiDAR
+        self.lidar = robot.getDevice("LDS-01")
+        self.lidar.enable(self.timestep)
+
+        # Compass (used for yaw)
+        self.compass = robot.getDevice("compass")
+        self.compass.enable(self.timestep)
+
+        # Gyro
+        self.gyro = robot.getDevice("gyro")
+        self.gyro.enable(self.timestep)
+
+        # Accelerometer
+        self.accelerometer = robot.getDevice("accelerometer")
+        self.accelerometer.enable(self.timestep)
+
+        # Wheel encoders
+        self.left_encoder = self.left_motor.getPositionSensor()
+        self.right_encoder = self.right_motor.getPositionSensor()
+
+        self.left_encoder.enable(self.timestep)
+        self.right_encoder.enable(self.timestep)
+
+    # -------------------
+    # Timing
+    # -------------------
+    def get_time_step(self):
+        return self.timestep
+
+    # -------------------
+    # Actuators
+    # -------------------
+    def set_wheel_velocity(self, left: float, right: float):
+        self.left_motor.setVelocity(left)
+        self.right_motor.setVelocity(right)
+
+    # -------------------
+    # LiDAR
+    # -------------------
+    def get_lidar_scan(self):
+        return self.lidar.getRangeImage()
+
+    def get_lidar_meta(self):
+        return {
+            "fov": self.lidar.getFov(),
+            "horizontal_resolution": self.lidar.getHorizontalResolution(),
+            "range_min": self.lidar.getMinRange(),
+            "range_max": self.lidar.getMaxRange(),
+        }
+
+    # -------------------
+    # Orientation (yaw only)
+    # -------------------
+    def get_yaw(self):
+        north = self.compass.getValues()
+        return math.atan2(north[0], north[2])
+
+    # -------------------
+    # IMU-like sensors
+    # -------------------
+    def get_gyro(self):
+        return self.gyro.getValues()
+
+    def get_accelerometer(self):
+        return self.accelerometer.getValues()
+
+    # -------------------
+    # Odometry
+    # -------------------
+    def get_wheel_positions(self):
+        return (
+            self.left_encoder.getValue(),
+            self.right_encoder.getValue(),
+        )
+
+=========================================
+FILE: src\infrastructure\webots\webots_motion_controller.py
+=========================================
+from src.interfaces.motion_controller import MotionController
+
+class WebotsMotionController(MotionController):
+    def __init__(self, hardware):
+        self.hardware = hardware
+
+    def _scale(self, speed: float):
+        # clamp to [-1, 1]
+        speed = max(-1.0, min(1.0, speed))
+        return speed * self.hardware.max_wheel_speed
+
+    def move_forward(self, speed: float):
+        v = self._scale(speed)
+        self.hardware.set_wheel_velocity(v, v)
+
+    def rotate(self, speed: float):
+        v = self._scale(speed)
+        self.hardware.set_wheel_velocity(-v, v)
+
+    def stop(self):
+        self.hardware.set_wheel_velocity(0.0, 0.0)
+
+=========================================
+FILE: src\infrastructure\webots\webots_sensors_controller.py
+=========================================
+from src.interfaces.sensors_controller import SensorsController
+
+
+class WebotsSensorsController(SensorsController):
+    def __init__(self, hardware):
+        self.hardware = hardware
+
+    # -------------------
+    # Raw scan
+    # -------------------
+    def get_scan(self):
+        return self.hardware.get_lidar_scan()
+
+    # -------------------
+    # Semantic LiDAR
+    # -------------------
+    def get_front_distance(self):
+        scan = self.hardware.get_lidar_scan()
+        n = len(scan)
+        return min(scan[n // 3 : 2 * n // 3])
+
+    def get_left_distance(self):
+        scan = self.hardware.get_lidar_scan()
+        n = len(scan)
+        return min(scan[: n // 3])
+
+    def get_right_distance(self):
+        scan = self.hardware.get_lidar_scan()
+        n = len(scan)
+        return min(scan[2 * n // 3 :])
+
+    # -------------------
+    # Orientation
+    # -------------------
+    def get_yaw(self):
+        return self.hardware.get_yaw()
+
+    # -------------------
+    # IMU-like sensors
+    # -------------------
+    def get_gyro(self):
+        return self.hardware.get_gyro()
+
+    def get_accelerometer(self):
+        return self.hardware.get_accelerometer()
+
+    # -------------------
+    # Odometry
+    # -------------------
+    def get_wheel_positions(self):
+        return self.hardware.get_wheel_positions()
+
+=========================================
+FILE: src\interfaces\motion_controller.py
+=========================================
+
+class MotionController:
+    def move_forward(self, speed: float):
+        raise NotImplementedError
+
+    def rotate(self, speed: float):
+        raise NotImplementedError
+
+    def stop(self):
+        raise NotImplementedError
+
+=========================================
+FILE: src\interfaces\sensors_controller.py
+=========================================
+class SensorsController:
+    def get_scan(self):
+        raise NotImplementedError
+
+    def get_front_distance(self):
+        raise NotImplementedError
+
+    def get_yaw(self):
+        raise NotImplementedError
+
+    def get_gyro(self):
+        raise NotImplementedError
+
+    def get_accelerometer(self):
+        raise NotImplementedError
+
+    def get_wheel_positions(self):
+        raise NotImplementedError
+
+=========================================
+FILE: worlds\warehouse.wbt
+=========================================
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/factory/containers/protos/WoodenBox.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/robotis/turtlebot/protos/TurtleBot3Burger.proto"
+
+WorldInfo {
+  title "Warehouse"
+  defaultDamping Damping {
+    linear 0.5
+    angular 0.5
+  }
+}
+Viewpoint {
+  orientation -0.30047039282501387 0.3047283173952659 0.9038020776768727 1.6466992863490877
+  position 1.2753479816672921 -12.967857299964802 9.86449088311498
+}
+Background {
+  skyColor [
+    0.15 0.15 0.2
+  ]
+}
+DirectionalLight {
+  direction 0 -1 -0.3
+  intensity 0.8
+  castShadows TRUE
+}
+DEF FLOOR Solid {
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.5 0.5 0.5
+        roughness 0.9
+        metalness 0
+      }
+      geometry Plane {
+        size 12 8
+      }
+    }
+  ]
+  name "floor"
+  boundingObject Plane {
+    size 12 8
+  }
+}
+DEF WALL_N Solid {
+  translation 0 4 0.5
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.3 0.35
+      }
+      geometry Box {
+        size 12 0.1 1
+      }
+    }
+  ]
+  name "wall_north"
+  boundingObject Box {
+    size 12 0.1 1
+  }
+}
+DEF WALL_S Solid {
+  translation 0 -4 0.5
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.3 0.35
+      }
+      geometry Box {
+        size 12 0.1 1
+      }
+    }
+  ]
+  name "wall_south"
+  boundingObject Box {
+    size 12 0.1 1
+  }
+}
+DEF WALL_W Solid {
+  translation -6 0 0.5
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.3 0.35
+      }
+      geometry Box {
+        size 0.1 8 1
+      }
+    }
+  ]
+  name "wall_west"
+  boundingObject Box {
+    size 0.1 8 1
+  }
+}
+DEF WALL_E Solid {
+  translation 6 0 0.5
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.3 0.35
+      }
+      geometry Box {
+        size 0.1 8 1
+      }
+    }
+  ]
+  name "wall_east"
+  boundingObject Box {
+    size 0.1 8 1
+  }
+}
+DEF SHELF_A0S2 WoodenBox {
+  translation -2 2.3 0.3
+  name "shelf_a0s2"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A1S2 WoodenBox {
+  translation 0 2.3 0.3
+  name "shelf_a1s2"
+  size 0.6 0.4 0.6
+}
+DEF SHELF_A2S2 WoodenBox {
+  translation 2 2.3 0.3
+  name "shelf_a2s2"
+  size 0.6 0.4 0.6
+}
+TurtleBot3Burger {
+  controller "robot_controller"
+}
+
+=========================================
+FILE: README.md
+=========================================
+# Warehouse Robot System — Prototype
+
+4487 Software Engineering for Cyberphysical Systems, 2025-2026
+
+## Folder structure
+
+```
+root/
+├── robots/
+│   ├── robot_controller.py   # Webots robot controller (state machine)
+│   ├── comms.py              # WebSocket client — only file that knows about networking
+│   └── navigation.py         # Proportional waypoint follower — no Webots imports
+├── server/
+│   └── main.py               # FastAPI server: queue, aisle locks, WebSocket hub
+├── simulation/
+│   └── warehouse.wbt         # Webots world: 3 aisles × 3 shelves, 3 TurtleBots
+├── webapp/
+│   └── index.html            # Single-file dashboard (no build step needed)
+├── tests/
+│   └── test_warehouse.py     # pytest tests for server logic and navigation
+└── requirements.txt
+```
+
+## Architecture overview
+
+```
+┌─────────────┐   WebSocket /ws/robot/{id}   ┌────────────────┐
+│  Robot 0    │ ◄────────────────────────────► │                │
+│  Robot 1    │ ◄────────────────────────────► │  Central       │
+│  Robot 2    │ ◄────────────────────────────► │  Server        │
+└─────────────┘                                │  (FastAPI)     │
+  Webots sim                                   │                │
+                                               │  - Item queue  │
+┌─────────────┐   WebSocket /ws/ui            │  - Aisle locks │
+│  Web UI     │ ◄────────────────────────────► │  - Robot state │
+│  (browser)  │                                └────────────────┘
+└─────────────┘
+```
+
+**Key design decisions:**
+- `comms.py` is the only file with knowledge of WebSockets. Swapping to MQTT means only changing this file.
+- `navigation.py` has no Webots imports — it can be unit tested and reused on real hardware.
+- The server is a single source of truth. Robots are stateless clients: if a robot restarts, it reconnects and receives its next task normally.
+- Aisle locking is centralised on the server, not negotiated between robots, avoiding distributed consensus complexity.
+
+## Quick start
+
+### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Start the server
+
+```bash
+cd server
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### 3. Open the web UI
+
+Open `webapp/index.html` in a browser (or serve it with any static file server).
+
+```bash
+cd webapp
+python -m http.server 3000
+# then open http://localhost:3000
+```
+
+### 4. Run the simulation
+
+1. Open Webots.
+2. Open `simulation/warehouse.wbt`.
+3. Set the controller for each TurtleBot to `robot_controller` (pointing to `robots/robot_controller.py`).
+4. Make sure `comms.py` and `navigation.py` are in the same directory as `robot_controller.py`.
+5. Press Play — robots will connect to the server automatically.
+
+### 5. Add items to pick
+
+In the web UI, type an item name, set the aisle (0–2) and shelf (0–2), and click **Add to queue**.  
+An idle robot will be assigned the task immediately.
+
+### 6. Run tests
+
+```bash
+pip install pytest pytest-asyncio
+pytest tests/ -v
+```
+
+## Adjusting the warehouse layout
+
+If you change shelf positions in the Webots world, update the matching dictionaries in `robots/robot_controller.py`:
+
+- `SHELF_POSITIONS` — `(aisle, shelf) -> (world_x, world_y)`
+- `AISLE_ENTRY` — `aisle -> (world_x, world_y)` where the robot waits before entering
+- `HOME_POSITIONS` — per-robot home pose
+
+The server does not need to know about physical positions — it only deals with aisle indices.
+
+## Next steps for the final system
+
+- Replace the proportional controller in `navigation.py` with a proper SLAM / path-planning stack (e.g. integrate a SLAM library for map building and A* for routing).
+- Add collision detection / replanning (currently robots avoid each other only via aisle locks).
+- Persist the item queue to a database (SQLite or PostgreSQL) so the server can restart without losing state.
+- Add authentication to the web UI.
+- Replace `WoodenBox` shelf proxies in the Webots world with proper shelf models.
+
+=========================================
+FILE: requirements.txt
+=========================================
+# Server dependencies
+fastapi>=0.110
+uvicorn[standard]>=0.29
+websockets>=12
+
+# Robot controller dependencies (installed in Webots Python environment)
+websocket-client>=1.7
+
+# Test dependencies
+pytest>=8
+pytest-asyncio>=0.23
