@@ -1,10 +1,16 @@
+from abc import ABC, abstractmethod
 
-class MotionController:
-    def move_forward(self, speed: float):
-        raise NotImplementedError
+class IMotionController(ABC):
+    """Interface for all motion controllers."""
 
-    def rotate(self, speed: float):
-        raise NotImplementedError
+    @abstractmethod
+    def move_forward(self, speed: float) -> None:
+        pass
+    
+    @abstractmethod
+    def rotate(self, speed: float) -> None:
+        pass
 
-    def stop(self):
-        raise NotImplementedError
+    @abstractmethod
+    def stop(self) -> None:
+        pass

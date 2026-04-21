@@ -1,19 +1,35 @@
+from abc import ABC, abstractmethod
 
-class SensorsController:
+class ISensorsController(ABC):
+
+    @abstractmethod
     def get_scan(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_front_distance(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
+    def get_left_distance(self):
+        pass
+
+    @abstractmethod
+    def get_right_distance(self):
+        pass
+    
+    @abstractmethod
     def get_yaw(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_gyro(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_accelerometer(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_wheel_positions(self):
-        raise NotImplementedError
+        pass

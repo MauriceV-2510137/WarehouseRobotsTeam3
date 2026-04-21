@@ -1,6 +1,6 @@
-from interfaces.sensors_controller import SensorsController
+from interfaces.sensors_controller import ISensorsController
 
-class WebotsSensorsController(SensorsController):
+class WebotsSensorsController(ISensorsController):
     def __init__(self, hardware):
         self.hardware = hardware
 
