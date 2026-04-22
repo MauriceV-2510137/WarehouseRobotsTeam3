@@ -15,9 +15,9 @@ motion = WebotsMotionController(hardware)
 sensors = WebotsSensorsController(hardware)
 comm = MqttRobotClient("default")
 
-robot = Robot(motion, sensors, comm)
-
 timestep = hardware.get_time_step()
+
+robot = Robot(timestep, motion, sensors, comm)
 
 # --- main loop ---
 while webots_robot.step(timestep) != -1:

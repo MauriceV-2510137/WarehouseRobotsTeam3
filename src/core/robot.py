@@ -4,27 +4,45 @@ from core.task_manager import TaskManager, TaskAlreadyAssignedError
 from core.events import TaskReceivedEvent, AisleResponseEvent
 from core.state_machine import StateMachine
 from core.states.state_waiting_for_connection import WaitingForConnectionState
+from core.scheduler import Scheduler, ScheduledTask
+from core.services.telemetry_service import TelemetryService
 
 from interfaces.motion_controller import IMotionController
 from interfaces.sensors_controller import ISensorsController
 from interfaces.robot_comm import IRobotComm
 
 class Robot:
-    def __init__(self, motion_controller: IMotionController, sensors: ISensorsController, comm: IRobotComm):
-        self.motion    = motion_controller
-        self.sensors   = sensors
 
-        self.comm = comm
+    def _handleStartup(self):
         self.comm.set_on_task_received(self._on_task_received)
         self.comm.set_on_aisle_response(self._on_aisle_response)
+
+        self.scheduler.add(ScheduledTask(
+            interval_s= 1,
+            callback= self.telemetry.publish_heartbeat
+        ))
+    
+    def __init__(self, timestep, motion_controller: IMotionController, sensors: ISensorsController, comm: IRobotComm):
+        self.timestep = timestep
+        self.sim_time = 0.0
+
+        self.scheduler = Scheduler()
+
+        self.telemetry = TelemetryService(self)
+
+        self.motion = motion_controller
+        self.sensors = sensors
+        self.comm = comm
         
-        self.odometry  = OdometryEstimator()
+        self.odometry = OdometryEstimator()
         self.navigator = Navigator()
 
         self.task_manager = TaskManager()
         
         self.pose = None
         self.state_machine = StateMachine(self, WaitingForConnectionState())
+
+        self._handleStartup()
     
     # -------------------------
     # Event handlers
@@ -53,17 +71,23 @@ class Robot:
         self.pose = self.odometry.update(left_enc, right_enc, yaw)
     
     # -------------------------
+    # Simulation Time
+    # -------------------------
+    
+    def _update_sim_time(self):
+        self.sim_time += self.timestep / 1000.0
+    
+    # -------------------------
     # Main loop
     # -------------------------
     def update(self):
 
-        # Update pose
-        self._update_pose()
+        # Update simulation time
+        self._update_sim_time()
 
-        # Update state machine
+        # FAST Loop
+        self._update_pose()
         self.state_machine.update()
 
-        # Send current status
-        if self.comm.is_connected():
-            task = self.task_manager.get_task()
-            self.comm.publish_heartbeat(task, self.pose)
+        # Scheduled Loop
+        self.scheduler.update(self.sim_time)

@@ -92,7 +92,7 @@ class MqttRobotClient(IRobotComm):
                 "pose": [pose.x, pose.y, pose.theta]
             }),
             qos=1,
-            retain=True
+            retain=False
         )
 
     # -------------------------
