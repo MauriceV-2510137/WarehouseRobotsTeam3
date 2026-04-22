@@ -1,4 +1,4 @@
-from core.states import IRobotState
+from interfaces.robot_state import IRobotState
 
 class MovingToShelfState(IRobotState):
     def __init__(self):

@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Warehouse robot system"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pytest",
+    "pytest-asyncio",
+    "paho-mqtt"
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -1,9 +1,11 @@
 from controller import Robot as WebotsRobot
 
 from core.robot import Robot
+
 from infrastructure.webots.webots_hardware import WebotsHardware
 from infrastructure.webots.webots_motion_controller import WebotsMotionController
 from infrastructure.webots.webots_sensors_controller import WebotsSensorsController
+from infrastructure.mqtt.mqtt_robot_client import MqttRobotClient
 
 # --- Webots setup ---
 webots_robot = WebotsRobot()
@@ -11,7 +13,9 @@ webots_robot = WebotsRobot()
 hardware = WebotsHardware(webots_robot)
 motion = WebotsMotionController(hardware)
 sensors = WebotsSensorsController(hardware)
-robot = Robot(motion, sensors)
+comm = MqttRobotClient("default")
+
+robot = Robot(motion, sensors, comm)
 
 timestep = hardware.get_time_step()
 
