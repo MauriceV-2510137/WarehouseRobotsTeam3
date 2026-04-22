@@ -1,9 +1,10 @@
 from interfaces.robot_state import IRobotState
+from core.state_machine import NoTransition
 from core.states.state_idle import IdleState
 
 class WaitingForConnectionState(IRobotState):
 
-    def on_enter(self, robot):
+    def on_enter(self, robot) -> None:
         robot.comm.connect()
         print("Waiting for MQTT connection...")
         robot.motion.stop()
@@ -13,4 +14,4 @@ class WaitingForConnectionState(IRobotState):
             print("MQTT connected!")
             return IdleState()
 
-        return self
+        return NoTransition()

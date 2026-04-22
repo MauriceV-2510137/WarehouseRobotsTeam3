@@ -1,5 +1,9 @@
 from interfaces.robot_state import IRobotState
 
+class NoTransition:
+    """Explicit marker meaning: remain in current state."""
+    pass
+
 class StateMachine:
     def __init__(self, robot, initial_state: IRobotState):
         self._robot = robot
@@ -13,6 +17,9 @@ class StateMachine:
 
     def update(self):
         next_state = self._state.update(self._robot)
+
+        if isinstance(next_state, NoTransition):
+            return
 
         if next_state is not self._state and next_state is not None:
             self._switch_state(next_state)

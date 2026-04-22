@@ -1,13 +1,10 @@
 from interfaces.robot_state import IRobotState
+from core.state_machine import NoTransition
 
 class MovingToShelfState(IRobotState):
-    def __init__(self):
-        # This state manages its own sub-states
-        pass
         
-    def on_enter(self, robot):
+    def on_enter(self, robot) -> None:
         print(f"Robot starting journey to shelf.")
-        # Trigger pathfinding here
 
     def update(self, robot) -> IRobotState:
-        return self
+        return NoTransition()
