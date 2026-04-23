@@ -33,3 +33,17 @@ class TaskManager:
 
     def clear(self):
         self._current_task = None
+from collections import deque
+from core.task import Task
+
+class TaskManager:
+    def __init__(self):
+        self.queue = deque()
+
+    def add_task(self, task: Task):
+        self.queue.append(task)
+
+    def get_next_task(self) -> Task:
+        if self.queue:
+            return self.queue.popleft()
+        return None

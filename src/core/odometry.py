@@ -10,6 +10,7 @@ class OdometryEstimator:
         self.wheel_base    = wheel_base
         self._prev_left    = 0.0
         self._prev_right   = 0.0
+        self._prev_theta   = 0.0
         self.pose          = Pose()
 
     def update(self, left_enc: float, right_enc: float, yaw: float) -> Pose:
@@ -20,8 +21,16 @@ class OdometryEstimator:
         self._prev_right = right_enc
 
         d = (dl + dr) / 2.0
-        self.pose.theta = yaw
-        self.pose.x += d * math.cos(yaw)
-        self.pose.y += d * math.sin(yaw)
+        
+        # Use wheel encoders for heading instead of compass
+        # This is more stable for differential drive robots
+        d_theta = (dr - dl) / self.wheel_base
+        self._prev_theta += d_theta
+        
+        # Normalize theta to [-pi, pi]
+        self.pose.theta = (self._prev_theta + math.pi) % (2 * math.pi) - math.pi
+        
+        self.pose.x += d * math.cos(self.pose.theta)
+        self.pose.y += d * math.sin(self.pose.theta)
 
         return self.pose

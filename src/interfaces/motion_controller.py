@@ -14,3 +14,7 @@ class IMotionController(ABC):
     @abstractmethod
     def stop(self) -> None:
         pass
+
+    @abstractmethod
+    def set_wheel_velocities(self, linear: float, angular: float) -> None:
+        pass

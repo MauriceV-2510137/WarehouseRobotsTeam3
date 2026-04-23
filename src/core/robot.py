@@ -10,6 +10,10 @@ from core.services.telemetry_service import TelemetryService
 from interfaces.motion_controller import IMotionController
 from interfaces.sensors_controller import ISensorsController
 from interfaces.robot_comm import IRobotComm
+from core.states.state_idle import IdleState
+from core.task_manager import TaskManager
+from core.aisle_manager import AisleManager
+from core.pose import Pose
 
 class Robot:
 
@@ -40,7 +44,15 @@ class Robot:
         self.task_manager = TaskManager()
         
         self.pose = None
-        self.state_machine = StateMachine(self, WaitingForConnectionState())
+        self.state_machine = StateMachine(self, IdleState())
+        self.task_manager = TaskManager()
+        self.aisle_manager = AisleManager(3) 
+        self.robot_id = 0
+        
+        # Initialize pose to prevent None errors
+        self.pose = Pose(0.0, 0.0, 0.0)
+        self.current_state = IdleState()
+        self.current_state.on_enter(self)
 
         self._handleStartup()
     

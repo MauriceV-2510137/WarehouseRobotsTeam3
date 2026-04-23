@@ -37,8 +37,6 @@ class Navigator:
         # Normalize to [-pi, pi]
         angle_error = (angle_error + math.pi) % (2 * math.pi) - math.pi
 
-        # Proportional control
         angular = 1.5 * angle_error
-        linear  = 0.5 * distance if abs(angle_error) < 0.3 else 0.0  # move only when roughly aligned
 
         return linear, angular
