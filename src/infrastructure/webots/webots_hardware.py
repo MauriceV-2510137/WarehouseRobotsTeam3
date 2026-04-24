@@ -1,8 +1,10 @@
 import math
 
 class WebotsHardware:
-    def __init__(self, robot):
+    def __init__(self, robot, model):
         self.robot = robot
+        self.model = model
+
         self.timestep = int(robot.getBasicTimeStep())
 
         # -------------------
@@ -15,14 +17,8 @@ class WebotsHardware:
         self.right_motor.setPosition(float("inf"))
 
         # -------------------
-        # Hardware limits / config
-        # -------------------
-        self.max_wheel_speed = 6.28
-
-        # -------------------
         # Sensors
         # -------------------
-
         # LiDAR
         self.lidar = robot.getDevice("LDS-01")
         self.lidar.enable(self.timestep)
@@ -42,7 +38,6 @@ class WebotsHardware:
         # Wheel encoders
         self.left_encoder = self.left_motor.getPositionSensor()
         self.right_encoder = self.right_motor.getPositionSensor()
-
         self.left_encoder.enable(self.timestep)
         self.right_encoder.enable(self.timestep)
 

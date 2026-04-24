@@ -1,10 +1,13 @@
 import math
 from core.pose import Pose
+from core.robot_model import RobotModel
 
 class OdometryEstimator:
-    def __init__(self, wheel_radius: float, wheel_base: float):
-        self.r = wheel_radius
-        self.L = wheel_base
+    def __init__(self, model: RobotModel):
+        self.model = model
+
+        self.r = model.wheel_radius
+        self.L = model.wheel_base
 
         self._prev_left = None
         self._prev_right = None
@@ -12,29 +15,30 @@ class OdometryEstimator:
         self.pose = Pose()
 
     def update(self, left_enc: float, right_enc: float) -> Pose:
-        # First call initialization
+
+        # Initialize
         if self._prev_left is None:
             self._prev_left = left_enc
             self._prev_right = right_enc
             return self.pose
 
-        # Wheel displacement
+        # Wheel travel distances
         dl = (left_enc - self._prev_left) * self.r
         dr = (right_enc - self._prev_right) * self.r
 
         self._prev_left = left_enc
         self._prev_right = right_enc
 
-        # Differential drive kinematics
-        d = (dl + dr) / 2.0
-        dtheta = (dr - dl) / self.L
+        # Differential drive model
+        d_center = (dl + dr) / 2.0
+        d_theta = (dr - dl) / self.L
 
-        # Midpoint integration (more stable)
-        theta_mid = self.pose.theta + dtheta / 2.0
+        # Midpoint integration (important stability improvement)
+        theta_mid = self.pose.theta + d_theta / 2.0
 
-        self.pose.x += d * math.cos(theta_mid)
-        self.pose.y += d * math.sin(theta_mid)
-        self.pose.theta += dtheta
+        self.pose.x += d_center * math.cos(theta_mid)
+        self.pose.y += d_center * math.sin(theta_mid)
+        self.pose.theta += d_theta
 
         # Normalize angle
         self.pose.theta = math.atan2(

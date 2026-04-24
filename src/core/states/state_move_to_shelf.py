@@ -18,7 +18,7 @@ class MovingToShelfState(IRobotState):
     def on_exit(self, robot) -> None:
         robot.motion.stop()
 
-    def update(self, robot) -> IRobotState:
+    def update(self, robot, dt: float) -> IRobotState:
         linear, angular = robot.navigator.compute(robot.pose)
 
         robot.motion.move(linear, angular)

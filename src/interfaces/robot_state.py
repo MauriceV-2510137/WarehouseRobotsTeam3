@@ -12,7 +12,7 @@ class IRobotState(ABC):
         pass
     
     @abstractmethod
-    def update(self, robot) -> 'IRobotState':
+    def update(self, robot, dt: float) -> 'IRobotState':
         """
         Executes the state's logic.
         Returns:

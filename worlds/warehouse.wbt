@@ -1,6 +1,5 @@
 #VRML_SIM R2025a utf8
 
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/factory/containers/protos/WoodenBox.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/robotis/turtlebot/protos/TurtleBot3Burger.proto"
 
 WorldInfo {
@@ -12,7 +11,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation -0.30047039282501387 0.3047283173952659 0.9038020776768727 1.6466992863490877
-  position 1.2753479816672921 -12.967857299964802 9.86449088311498
+  position 0.09039523284934692 -17.9402597886401 14.242766051261608
 }
 Background {
   skyColor [
@@ -109,21 +108,6 @@ DEF WALL_E Solid {
   boundingObject Box {
     size 0.1 8 1
   }
-}
-DEF SHELF_A0S2 WoodenBox {
-  translation -2 2.3 0.3
-  name "shelf_a0s2"
-  size 0.6 0.4 0.6
-}
-DEF SHELF_A1S2 WoodenBox {
-  translation 0 2.3 0.3
-  name "shelf_a1s2"
-  size 0.6 0.4 0.6
-}
-DEF SHELF_A2S2 WoodenBox {
-  translation 2 2.3 0.3
-  name "shelf_a2s2"
-  size 0.6 0.4 0.6
 }
 TurtleBot3Burger {
   controller "robot_controller"

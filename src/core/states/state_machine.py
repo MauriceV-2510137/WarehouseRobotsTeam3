@@ -15,8 +15,8 @@ class StateMachine:
         self._state = state_switch
         self._state.on_enter(self._robot)
 
-    def update(self):
-        next_state = self._state.update(self._robot)
+    def update(self, dt: float):
+        next_state = self._state.update(self._robot, dt)
 
         if isinstance(next_state, NoTransition):
             return

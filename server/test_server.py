@@ -17,12 +17,12 @@ client.subscribe("robot/default/heartbeat")
 time.sleep(10)
 
 # Send task
-print("SERVER SENDING: t1, shelf: [2.0, 1.0], base: [0.0, 0.0]")
+print("SERVER SENDING: t1, shelf: [5.0, 2.0], base: [0.0, 0.0]")
 client.publish(
     "robot/default/task/assign",
     json.dumps({
         "task_id": "t1",
-        "shelf": [2.0, 1.0],
+        "shelf": [5.0, 2.0],
         "base": [0.0, 0.0]
     })
 )

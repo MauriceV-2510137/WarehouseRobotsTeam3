@@ -5,7 +5,7 @@ from typing import Callable, List
 class ScheduledTask:
     interval_s: float
     callback: Callable
-    last_run: float = 0.0
+    accumulator: float = 0.0
 
 class Scheduler:
     def __init__(self):
@@ -14,8 +14,11 @@ class Scheduler:
     def add(self, task: ScheduledTask):
         self.tasks.append(task)
 
-    def update(self, current_time: float):
+    def update(self, dt: float):
         for task in self.tasks:
-            if current_time - task.last_run >= task.interval_s:
+
+            task.accumulator += dt
+
+            if task.accumulator >= task.interval_s:
                 task.callback()
-                task.last_run = current_time
+                task.accumulator -= task.interval_s

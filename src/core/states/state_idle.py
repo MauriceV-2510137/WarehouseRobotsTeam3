@@ -9,7 +9,7 @@ class IdleState(IRobotState):
         print("Robot entered Idle state!")
         robot.motion.stop()
 
-    def update(self, robot) -> IRobotState:
+    def update(self, robot, dt: float) -> IRobotState:
         if robot.task_manager.has_task():
             return StateFactory.MoveToShelf()
         return NoTransition()

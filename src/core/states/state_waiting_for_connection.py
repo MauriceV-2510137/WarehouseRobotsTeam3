@@ -9,7 +9,7 @@ class WaitingForConnectionState(IRobotState):
         robot.comm.connect()
         robot.motion.stop()
 
-    def update(self, robot) -> IRobotState:
+    def update(self, robot, dt: float) -> IRobotState:
         if robot.comm.is_connected():
             return StateFactory.Idle()
 

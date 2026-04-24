@@ -1,18 +1,17 @@
 import math
 from core.pose import Pose
+from core.robot_model import RobotModel
 
 class Navigator:
-    def __init__(self):
+    def __init__(self, model: RobotModel):
         self.target = None
+        self._model = model
 
-        self.position_tolerance = 0.15
-        self.angle_tolerance = 0.1
+        self.position_tolerance = 0.1
+        self.angle_tolerance = 0.08
 
-        self.k_linear = 1.0
-        self.k_angular = 2.5
-
-        self.max_linear = 0.6
-        self.max_angular = 1.5
+        self.k_linear = model.default_linear_gain
+        self.k_angular = model.default_angular_gain
 
     def set_target(self, x: float, y: float):
         self.target = (x, y)
@@ -22,6 +21,9 @@ class Navigator:
 
     def is_done(self) -> bool:
         return self.target is None
+    
+    def _normalize_angle(self, a: float) -> float:
+        return math.atan2(math.sin(a), math.cos(a))
 
     def compute(self, pose: Pose) -> tuple[float, float]:
         if self.target is None:
@@ -34,31 +36,32 @@ class Navigator:
 
         distance = math.hypot(dx, dy)
 
-        # Stop condition
+        # --- Stop condition ---
         if distance < self.position_tolerance:
             self.target = None
             return 0.0, 0.0
 
-        # Heading
         target_angle = math.atan2(dy, dx)
-        angle_error = target_angle - pose.theta
+        angle_error = self._normalize_angle(target_angle - pose.theta)
 
-        angle_error = math.atan2(
-            math.sin(angle_error),
-            math.cos(angle_error)
-        )
-
-        # --- Control strategy ---
-        # If facing wrong direction -> rotate first
-        if abs(angle_error) > 0.5:
-            linear = 0.0
-        else:
-            linear = self.k_linear * distance
-
+        # --- Angular control ---
         angular = self.k_angular * angle_error
+        angular = max(-self._model.max_angular_speed, min(self._model.max_angular_speed, angular))
 
-        # Clamp
-        linear = min(self.max_linear, linear)
-        angular = max(-self.max_angular, min(self.max_angular, angular))
+        # --- Linear control (smooth + stable) ---
+        alignment = math.cos(angle_error)
+
+        # prevent backward motion
+        alignment = max(0.0, alignment)
+
+        # slow down when misaligned OR close to target
+        linear = self.k_linear * distance * alignment
+
+        # soft cap
+        linear = min(linear, self._model.max_linear_speed)
+
+        # final safety clamp near target behavior
+        if abs(angle_error) > 0.8:
+            linear = 0.0
 
         return linear, angular
