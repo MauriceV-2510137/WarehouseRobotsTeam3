@@ -4,11 +4,8 @@ class IMotionController(ABC):
     """Interface for all motion controllers."""
 
     @abstractmethod
-    def move_forward(self, speed: float) -> None:
-        pass
-    
-    @abstractmethod
-    def rotate(self, speed: float) -> None:
+    def move(self, linear: float, angular: float) -> None:
+        """Move the robot using combined linear and angular commands."""
         pass
 
     @abstractmethod

@@ -4,18 +4,24 @@ class WebotsMotionController(IMotionController):
     def __init__(self, hardware):
         self.hardware = hardware
 
-    def _scale(self, speed: float):
-        # clamp to [-1, 1]
-        speed = max(-1.0, min(1.0, speed))
-        return speed * self.hardware.max_wheel_speed
+        self.r = 0.033   # wheel radius
+        self.L = 0.160   # wheel base
 
-    def move_forward(self, speed: float) -> None:
-        v = self._scale(speed)
-        self.hardware.set_wheel_velocity(v, v)
+    def move(self, linear: float, angular: float) -> None:
+        # Convert to wheel speeds
+        v_left  = (linear - angular * self.L / 2.0) / self.r
+        v_right = (linear + angular * self.L / 2.0) / self.r
 
-    def rotate(self, speed: float) -> None:
-        v = self._scale(speed)
-        self.hardware.set_wheel_velocity(-v, v)
+        # Normalize
+        max_speed = self.hardware.max_wheel_speed
+        max_val = max(abs(v_left), abs(v_right))
+
+        if max_val > max_speed:
+            scale = max_speed / max_val
+            v_left *= scale
+            v_right *= scale
+
+        self.hardware.set_wheel_velocity(v_left, v_right)
 
     def stop(self) -> None:
         self.hardware.set_wheel_velocity(0.0, 0.0)

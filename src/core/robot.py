@@ -2,10 +2,11 @@ from core.odometry import OdometryEstimator
 from core.navigator import Navigator
 from core.task_manager import TaskManager, TaskAlreadyAssignedError
 from core.events import TaskReceivedEvent, AisleResponseEvent
-from core.state_machine import StateMachine
+from core.states.state_machine import StateMachine
 from core.states.state_waiting_for_connection import WaitingForConnectionState
 from core.scheduler import Scheduler, ScheduledTask
 from core.services.telemetry_service import TelemetryService
+from core.pose import Pose
 
 from interfaces.motion_controller import IMotionController
 from interfaces.sensors_controller import ISensorsController
@@ -34,12 +35,12 @@ class Robot:
         self.sensors = sensors
         self.comm = comm
         
-        self.odometry = OdometryEstimator()
+        self.odometry = OdometryEstimator(wheel_radius=0.033, wheel_base=0.160)
         self.navigator = Navigator()
 
         self.task_manager = TaskManager()
         
-        self.pose = None
+        self.pose = Pose()
         self.state_machine = StateMachine(self, WaitingForConnectionState())
 
         self._handleStartup()
@@ -67,13 +68,11 @@ class Robot:
     # -------------------------
     def _update_pose(self):
         left_enc, right_enc = self.sensors.get_wheel_positions()
-        yaw  = self.sensors.get_yaw()
-        self.pose = self.odometry.update(left_enc, right_enc, yaw)
+        self.pose = self.odometry.update(left_enc, right_enc)
     
     # -------------------------
     # Simulation Time
     # -------------------------
-    
     def _update_sim_time(self):
         self.sim_time += self.timestep / 1000.0
     

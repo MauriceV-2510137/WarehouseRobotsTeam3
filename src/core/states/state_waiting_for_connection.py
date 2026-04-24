@@ -1,6 +1,7 @@
 from interfaces.robot_state import IRobotState
-from core.state_machine import NoTransition
-from core.states.state_idle import IdleState
+from core.states.state_machine import NoTransition
+
+from core.states.state_factory import StateFactory
 
 class WaitingForConnectionState(IRobotState):
 
@@ -10,6 +11,6 @@ class WaitingForConnectionState(IRobotState):
 
     def update(self, robot) -> IRobotState:
         if robot.comm.is_connected():
-            return IdleState()
+            return StateFactory.Idle()
 
         return NoTransition()
