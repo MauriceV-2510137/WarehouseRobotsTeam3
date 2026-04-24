@@ -2,7 +2,7 @@ import json
 import paho.mqtt.client as mqtt
 
 from interfaces.robot_comm import IRobotComm, TaskCallback, AisleCallback
-from core.task import Task
+from core.task import Task, TaskStatus
 from core.pose import Pose
 from core.events import TaskReceivedEvent, AisleResponseEvent
 
@@ -38,8 +38,9 @@ class MqttRobotClient(IRobotComm):
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             self._connected = True
+            self._subscribe()
             print("[MQTT] Connected successfully")
-            self.subscribe()
+            
         else:
             self._connected = False
             print(f"[MQTT] Connection failed (rc={rc})")
@@ -51,40 +52,17 @@ class MqttRobotClient(IRobotComm):
     def is_connected(self) -> bool:
         return self._connected
 
-    def subscribe(self):
+    def _subscribe(self):
         self.client.subscribe(f"robot/{self.robot_id}/task/assign")
         self.client.subscribe(f"robot/{self.robot_id}/aisle/response")
+        self.client.subscribe(f"robot/{self.robot_id}/aisle/grant")
 
     # -------------------------
     # Publish API
     # -------------------------
-    def publish_task_status(self, task_id, status, reason=None):
-        payload = {
-            "task_id": task_id,
-            "status": status,
-            "reason": reason
-        }
-
-        self.client.publish(
-            f"robot/{self.robot_id}/task/status",
-            json.dumps(payload),
-            qos=1
-        )
-
-    def request_aisle(self, robot_id, aisle_id, task_id):
-        payload = {
-            "robot_id": robot_id,
-            "aisle_id": aisle_id,
-            "task_id": task_id
-        }
-
-        self.client.publish(
-            f"robot/{robot_id}/aisle/request",
-            json.dumps(payload),
-            qos=1
-        )
-
-    def publish_heartbeat(self, task: Task, pose: Pose):
+    
+    # Hearthbeat
+    def publish_heartbeat(self, task: Task | None, pose: Pose):
         self.client.publish(
             f"robot/{self.robot_id}/heartbeat",
             json.dumps({
@@ -95,13 +73,54 @@ class MqttRobotClient(IRobotComm):
             retain=False
         )
 
+    # Task Status
+    def publish_task_status(self, task_id, status: TaskStatus, reason=None):
+        payload = {
+            "task_id": task_id,
+            "status": status.name,
+            "reason": reason
+        }
+
+        self.client.publish(
+            f"robot/{self.robot_id}/task/status",
+            json.dumps(payload),
+            qos=1
+        )
+
+    # Aisle Request
+    def request_aisle(self, robot_id, aisle_id, task_id):
+        payload = {
+            "robot_id": robot_id,
+            "aisle_id": aisle_id,
+            "task_id": task_id
+        }
+
+        self.client.publish(
+            f"aisle/{aisle_id}/request",
+            json.dumps(payload),
+            qos=1
+        )
+
+    # Aisle Release
+    def release_aisle(self, robot_id, aisle_id):
+        payload = {
+            "robot_id": robot_id,
+            "aisle_id": aisle_id
+        }
+
+        self.client.publish(
+            f"aisle/{aisle_id}/release",
+            json.dumps(payload),
+            qos=1
+        )
+
     # -------------------------
     # Callback registration
     # -------------------------
-    def set_on_task_received(self, callback: TaskCallback) -> None:
+    def set_task_received_callback(self, callback: TaskCallback) -> None:
         self._on_task_received = callback
 
-    def set_on_aisle_response(self, callback: AisleCallback) -> None:
+    def set_aisle_response_callback(self, callback: AisleCallback) -> None:
         self._on_aisle_response = callback
 
     # -------------------------
@@ -112,29 +131,32 @@ class MqttRobotClient(IRobotComm):
         payload = json.loads(msg.payload.decode())
 
         if topic.endswith("task/assign"):
-            task = self._parse_task(payload)
-            event = TaskReceivedEvent(task)
-
+            event = self._parse_task_received_event(payload)
             if self._on_task_received:
                 self._on_task_received(event)
 
         elif topic.endswith("aisle/response"):
-            event = AisleResponseEvent(
-                aisle_id=payload["aisle_id"],
-                granted=payload["granted"]
-            )
-
+            event = self._parse_aisle_response_event(payload)
             if self._on_aisle_response:
                 self._on_aisle_response(event)
 
     # -------------------------
     # Parsing layer
     # -------------------------
-    def _parse_task(self, payload: dict) -> Task:
-        return Task(
-            id=payload["task_id"],
-            shelf_x=payload["shelf"][0],
-            shelf_y=payload["shelf"][1],
-            base_x=payload["base"][0],
-            base_y=payload["base"][1],
+
+    def _parse_aisle_response_event(self, payload: dict) -> AisleResponseEvent:
+        return AisleResponseEvent(
+            aisle_id=payload["aisle_id"],
+            granted=payload["granted"]
+        )
+
+    def _parse_task_received_event(self, payload: dict) -> TaskReceivedEvent:
+        return TaskReceivedEvent(
+            Task(
+                id=payload["task_id"],
+                aisle_id=payload["aisle_id"],
+                aisle_pos=tuple(payload["aisle_pos"]),
+                segment_pos= tuple(payload["segment_pos"]),
+                base_pos=tuple(payload["base_pos"]),
+            )
         )

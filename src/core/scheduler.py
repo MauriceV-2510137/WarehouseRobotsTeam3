@@ -19,6 +19,6 @@ class Scheduler:
 
             task.accumulator += dt
 
-            if task.accumulator >= task.interval_s:
+            while task.accumulator >= task.interval_s:
                 task.callback()
                 task.accumulator -= task.interval_s

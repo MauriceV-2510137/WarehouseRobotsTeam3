@@ -1,7 +1,5 @@
 from interfaces.robot_state import IRobotState
-from core.states.state_machine import NoTransition
-
-from core.states.state_factory import StateFactory
+from core.states.transition_id import TransitionID
 
 class WaitingForConnectionState(IRobotState):
 
@@ -9,8 +7,8 @@ class WaitingForConnectionState(IRobotState):
         robot.comm.connect()
         robot.motion.stop()
 
-    def update(self, robot, dt: float) -> IRobotState:
+    def update(self, robot, dt: float) -> TransitionID:
         if robot.comm.is_connected():
-            return StateFactory.Idle()
+            return TransitionID.IDLE
 
-        return NoTransition()
+        return TransitionID.NO_TRANSITION

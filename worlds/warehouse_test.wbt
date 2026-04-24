@@ -1,7 +1,6 @@
 #VRML_SIM R2025a utf8
 
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/robotis/turtlebot/protos/TurtleBot3Burger.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/WoodenBox.proto"
 
 WorldInfo {
   title "Warehouse"
@@ -11,8 +10,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation -0.00763697211498989 -0.999442750423646 0.03249408073068617 5.545494683775356
-  position -10.496356470645152 0.1516290445000097 10.73104181190533
+  orientation 0.013375429845365636 0.9986480552301772 -0.05023106271458645 0.7057125184005039
+  position -10.912745594278084 0.284851927525409 11.401368087714541
 }
 Background {
   skyColor [
@@ -25,7 +24,7 @@ DirectionalLight {
   castShadows TRUE
 }
 DEF FLOOR Solid {
-  translation 2 0 0
+  translation 3 0 0
   children [
     Shape {
       appearance PBRAppearance {
@@ -42,7 +41,7 @@ DEF FLOOR Solid {
   boundingObject USE FLOOR_SHAPE
 }
 DEF WALL Solid {
-  translation 7.05 0 0.5
+  translation 7 0 0.5
   children [
     Shape {
       appearance PBRAppearance {
@@ -54,6 +53,19 @@ DEF WALL Solid {
     }
   ]
   name "wall_south"
+  boundingObject USE WALL_FRONT_BACK_SHAPE
+}
+DEF WALL Solid {
+  translation -1.01 0 0.5
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.3 0.3 0.35
+      }
+      geometry USE WALL_FRONT_BACK_SHAPE
+    }
+  ]
+  name "wall_south(1)"
   boundingObject USE WALL_FRONT_BACK_SHAPE
 }
 DEF WALL Solid {
@@ -85,65 +97,5 @@ DEF WALL Solid {
   boundingObject USE WALL_LEFT_RIGHT_SHAPE
 }
 TurtleBot3Burger {
-  translation 0 0 0.01
   controller "robot_controller"
-}
-WoodenBox {
-  translation 5.5 -1 0.3
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 5.5 -3 0.3
-  name "wooden box(2)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 5.5 -5 0.3
-  name "wooden box(3)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 2.71 -5 0.3
-  name "wooden box(8)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 0.48 -5 0.3
-  name "wooden box(9)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation -1.51 -5 0.3
-  name "wooden box(10)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 5.5 1 0.3
-  name "wooden box(1)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 5.5 3 0.3
-  name "wooden box(4)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 5.5 5 0.3
-  name "wooden box(5)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 2.61 5 0.3
-  name "wooden box(6)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 0.45 5 0.3
-  name "wooden box(7)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation -1.5 5 0.3
-  name "wooden box(11)"
-  size 3 1.5 0.6
 }

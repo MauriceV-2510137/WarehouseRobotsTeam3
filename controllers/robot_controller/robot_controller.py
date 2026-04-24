@@ -1,4 +1,5 @@
 from controller import Robot as WebotsRobot
+
 from bootstrap.robot_factory import build_webot_robot
 
 webots_robot = WebotsRobot()

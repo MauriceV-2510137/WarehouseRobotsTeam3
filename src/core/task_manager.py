@@ -1,7 +1,4 @@
-from core.task import Task, TaskStatus
-
-class TaskAlreadyAssignedError(Exception):
-    pass
+from core.task import Task, TaskAlreadyAssignedError, TaskStatus
 
 class TaskManager:
     def __init__(self):

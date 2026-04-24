@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from core.states.transition_id import TransitionID
+from core.events import Event
 
 class IRobotState(ABC):
     """Base class for all robot states."""
@@ -12,11 +14,10 @@ class IRobotState(ABC):
         pass
     
     @abstractmethod
-    def update(self, robot, dt: float) -> 'IRobotState':
-        """
-        Executes the state's logic.
-        Returns:
-            - next IRobotState to transition
-            - or NoTransition() to remain in current state
-        """
+    def update(self, robot, dt: float) -> TransitionID:
+        """Executes the state's logic."""
+        pass
+
+    def on_event(self, robot, event: Event) -> None:
+        """Handles events"""
         pass
