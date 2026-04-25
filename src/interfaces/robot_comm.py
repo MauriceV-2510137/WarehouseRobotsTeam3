@@ -15,6 +15,10 @@ class IRobotComm(ABC):
         pass
 
     @abstractmethod
+    def disconnect(self):
+        pass
+
+    @abstractmethod
     def is_connected(self) -> bool:
         pass
 

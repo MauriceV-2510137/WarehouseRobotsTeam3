@@ -6,6 +6,30 @@ client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
 def on_message(client, userdata, msg):
     print("SERVER RECEIVED:", msg.topic, msg.payload.decode())
+
+    if msg.topic.startswith("aisle/") and msg.topic.endswith("/request"):
+        payload = json.loads(msg.payload.decode())
+
+        aisle_id = payload["aisle_id"]
+        robot_id = payload["robot_id"]
+
+        # respond after delay (non-blocking)
+        def delayed_response():
+            time.sleep(3)
+
+            response = {
+                "aisle_id": aisle_id,
+                "granted": True
+            }
+
+            topic = f"robot/{robot_id}/aisle/response"
+
+            print(f"SERVER SENDING GRANT → {topic}")
+            client.publish(topic, json.dumps(response))
+
+        import threading
+        threading.Thread(target=delayed_response, daemon=True).start()
+
 client.on_message = on_message
 
 client.connect("localhost")
@@ -13,17 +37,20 @@ client.connect("localhost")
 client.loop_start()
 
 client.subscribe("robot/default/heartbeat")
+client.subscribe("aisle/+/request")
 
 time.sleep(10)
 
 # Send task
-print("SERVER SENDING: t1, shelf: [5.0, 2.0], base: [0.0, 0.0]")
+print("SERVER SENDING: t1, segment: [5.0, 5.0], base: [0.0, 0.0]")
 client.publish(
     "robot/default/task/assign",
     json.dumps({
         "task_id": "t1",
-        "shelf": [5.0, 2.0],
-        "base": [0.0, 0.0]
+        "aisle_id": "a1",
+        "aisle_pos": [3, -4],
+        "segment_pos": [6.5, -4],
+        "base_pos": [0.0, 0.0]
     })
 )
 

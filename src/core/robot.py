@@ -38,8 +38,8 @@ class Robot:
     # Wiring
     # -------------------------
     def _bind_events(self):
-        self.comm.set_task_received_callback(self._on_task_received)
-        self.comm.set_aisle_response_callback(self._on_aisle_response)
+        self.comm.set_task_received_callback(self.event_queue.publish)
+        self.comm.set_aisle_response_callback(self.event_queue.publish)
 
     def _setup_scheduler(self): # Heartbeat / health check
         heartbeat_task = ScheduledTask(interval_s=1.0, callback=self.telemetry.publish_heartbeat)
@@ -48,7 +48,6 @@ class Robot:
     # -------------------------
     # Events
     # -------------------------
-
     def _process_events(self):
         for event in self.event_queue.poll_all():
             self.state_machine.handle_event(event)
@@ -61,15 +60,6 @@ class Robot:
         self._process_events()
         self.state_machine.update(dt)
         self.scheduler.update(dt)
-
-    # -------------------------
-    # Event handlers
-    # -------------------------
-    def _on_task_received(self, event):
-        self.event_queue.publish(event)
-            
-    def _on_aisle_response(self, event):
-        self.event_queue.publish(event)
     
     # -------------------------
     # Sensors / pose

@@ -14,27 +14,45 @@ class MqttRobotClient(IRobotComm):
 
         self.client = mqtt.Client()
         self._connected = False
+        self._running = False
 
         self._on_task_received: TaskCallback | None = None
         self._on_aisle_response: AisleCallback | None = None
 
-        # MQTT callbacks
         self.client.on_connect = self._on_connect
         self.client.on_disconnect = self._on_disconnect
         self.client.on_message = self._on_message
 
+        self.client.reconnect_delay_set(min_delay=1, max_delay=5)
+
     # -------------------------
-    # Connection
+    # Lifecycle
     # -------------------------
     def connect(self):
         print("[MQTT] Starting async connection...")
+        self._running = True
         try:
             self.client.connect_async(self.broker_host)
             self.client.loop_start()
         except Exception as e:
             self._connected = False
             print(f"[MQTT] Initial connection error: {e}")
+        
+    def disconnect(self):
+        print("[MQTT] Disconnecting...")
+        self._running = False
+        try:
+            self.client.loop_stop()
+            self.client.disconnect()
+        except Exception as e:
+            print(f"[MQTT] Disconnect error: {e}")
 
+    def is_connected(self) -> bool:
+        return self._connected
+
+    # -------------------------
+    # MQTT callbacks
+    # -------------------------
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             self._connected = True
@@ -49,19 +67,20 @@ class MqttRobotClient(IRobotComm):
         self._connected = False
         print("[MQTT] Disconnected")
 
-    def is_connected(self) -> bool:
-        return self._connected
+        if self._running:
+            print("[MQTT] Attempting reconnect...")
+            try:
+                self.client.reconnect()
+            except Exception as e:
+                print(f"[MQTT] Reconnect failed: {e}")
 
     def _subscribe(self):
         self.client.subscribe(f"robot/{self.robot_id}/task/assign")
         self.client.subscribe(f"robot/{self.robot_id}/aisle/response")
-        self.client.subscribe(f"robot/{self.robot_id}/aisle/grant")
 
     # -------------------------
     # Publish API
     # -------------------------
-    
-    # Hearthbeat
     def publish_heartbeat(self, task: Task | None, pose: Pose):
         self.client.publish(
             f"robot/{self.robot_id}/heartbeat",
@@ -73,7 +92,6 @@ class MqttRobotClient(IRobotComm):
             retain=False
         )
 
-    # Task Status
     def publish_task_status(self, task_id, status: TaskStatus, reason=None):
         payload = {
             "task_id": task_id,
@@ -87,7 +105,6 @@ class MqttRobotClient(IRobotComm):
             qos=1
         )
 
-    # Aisle Request
     def request_aisle(self, robot_id, aisle_id, task_id):
         payload = {
             "robot_id": robot_id,
@@ -101,7 +118,6 @@ class MqttRobotClient(IRobotComm):
             qos=1
         )
 
-    # Aisle Release
     def release_aisle(self, robot_id, aisle_id):
         payload = {
             "robot_id": robot_id,
@@ -128,7 +144,12 @@ class MqttRobotClient(IRobotComm):
     # -------------------------
     def _on_message(self, client, userdata, msg):
         topic = msg.topic
-        payload = json.loads(msg.payload.decode())
+        
+        try:
+            payload = json.loads(msg.payload.decode())
+        except Exception as e:
+            print(f"[MQTT] Invalid JSON: {e}")
+            return
 
         if topic.endswith("task/assign"):
             event = self._parse_task_received_event(payload)

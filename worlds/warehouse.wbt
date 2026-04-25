@@ -5,14 +5,15 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 
 WorldInfo {
   title "Warehouse"
+  basicTimeStep 16
   defaultDamping Damping {
     linear 0.5
     angular 0.5
   }
 }
 Viewpoint {
-  orientation -0.00763697211498989 -0.999442750423646 0.03249408073068617 5.545494683775356
-  position -10.496356470645152 0.1516290445000097 10.73104181190533
+  orientation -0.015218448029644609 -0.993696241417116 0.11106835117649708 5.865776103305182
+  position -15.157848236352827 0.3362391584750559 8.269707631564994
 }
 Background {
   skyColor [
@@ -24,8 +25,7 @@ DirectionalLight {
   intensity 0.8
   castShadows TRUE
 }
-DEF FLOOR Solid {
-  translation 2 0 0
+DEF FLOOR_VIS Solid {
   children [
     Shape {
       appearance PBRAppearance {
@@ -33,13 +33,67 @@ DEF FLOOR Solid {
         roughness 0.9
         metalness 0
       }
-      geometry DEF FLOOR_SHAPE Plane {
-        size 8 12
+      geometry Plane {
+        size 8 9
       }
     }
   ]
   name "floor"
-  boundingObject USE FLOOR_SHAPE
+}
+DEF FLOOR_COL Solid {
+  translation 0 0 -0.5
+  name "floor(4)"
+  boundingObject Box {
+    size 15 15 1
+  }
+}
+DEF SEG1 Solid {
+  translation 4.5 0 0
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 0.5 0.5
+        roughness 0.9
+        metalness 0
+      }
+      geometry DEF SEG_SHAPE Plane {
+        size 1 9
+      }
+    }
+  ]
+  name "floor(1)"
+}
+DEF SEG2 Solid {
+  translation 5.5 0 0
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.5 1 0.5
+        roughness 0.9
+        metalness 0
+      }
+      geometry DEF SEG_SHAPE Plane {
+        size 1 9
+      }
+    }
+  ]
+  name "floor(2)"
+}
+DEF SEG3 Solid {
+  translation 6.5 0 0
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.5 0.5 1
+        roughness 0.9
+        metalness 0
+      }
+      geometry DEF SEG_SHAPE Plane {
+        size 1 9
+      }
+    }
+  ]
+  name "floor(3)"
 }
 DEF WALL Solid {
   translation 7.05 0 0.5
@@ -49,7 +103,7 @@ DEF WALL Solid {
         baseColor 0.3 0.3 0.35
       }
       geometry DEF WALL_FRONT_BACK_SHAPE Box {
-        size 0.1 12 1
+        size 0.1 9 1
       }
     }
   ]
@@ -57,7 +111,7 @@ DEF WALL Solid {
   boundingObject USE WALL_FRONT_BACK_SHAPE
 }
 DEF WALL Solid {
-  translation 3 6.01 0.5
+  translation 3 4.3 0.5
   children [
     Shape {
       appearance PBRAppearance {
@@ -72,7 +126,7 @@ DEF WALL Solid {
   boundingObject USE WALL_LEFT_RIGHT_SHAPE
 }
 DEF WALL Solid {
-  translation 3 -6 0.5
+  translation 3 -4.3 0.5
   children [
     Shape {
       appearance PBRAppearance {
@@ -86,64 +140,26 @@ DEF WALL Solid {
 }
 TurtleBot3Burger {
   translation 0 0 0.01
+  name "Vrooeeeemmmmm"
   controller "robot_controller"
 }
 WoodenBox {
   translation 5.5 -1 0.3
+  name "aisle_right"
   size 3 1.5 0.6
 }
 WoodenBox {
   translation 5.5 -3 0.3
-  name "wooden box(2)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 5.5 -5 0.3
-  name "wooden box(3)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 2.71 -5 0.3
-  name "wooden box(8)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 0.48 -5 0.3
-  name "wooden box(9)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation -1.51 -5 0.3
-  name "wooden box(10)"
+  name "aisle_right_2"
   size 3 1.5 0.6
 }
 WoodenBox {
   translation 5.5 1 0.3
-  name "wooden box(1)"
+  name "aisle_left"
   size 3 1.5 0.6
 }
 WoodenBox {
   translation 5.5 3 0.3
-  name "wooden box(4)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 5.5 5 0.3
-  name "wooden box(5)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 2.61 5 0.3
-  name "wooden box(6)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation 0.45 5 0.3
-  name "wooden box(7)"
-  size 3 1.5 0.6
-}
-WoodenBox {
-  translation -1.5 5 0.3
-  name "wooden box(11)"
+  name "aisle_left_2"
   size 3 1.5 0.6
 }
