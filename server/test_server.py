@@ -15,7 +15,7 @@ def on_message(client, userdata, msg):
 
         # respond after delay (non-blocking)
         def delayed_response():
-            time.sleep(3)
+            time.sleep(2)
 
             response = {
                 "aisle_id": aisle_id,
@@ -39,7 +39,7 @@ client.loop_start()
 client.subscribe("robot/default/heartbeat")
 client.subscribe("aisle/+/request")
 
-time.sleep(10)
+time.sleep(5)
 
 # Send task
 print("SERVER SENDING: t1, segment: [5.0, 5.0], base: [0.0, 0.0]")

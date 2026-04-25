@@ -5,15 +5,14 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 
 WorldInfo {
   title "Warehouse"
-  basicTimeStep 16
   defaultDamping Damping {
     linear 0.5
     angular 0.5
   }
 }
 Viewpoint {
-  orientation -0.015218448029644609 -0.993696241417116 0.11106835117649708 5.865776103305182
-  position -15.157848236352827 0.3362391584750559 8.269707631564994
+  orientation -0.001759149220132727 -0.9994432776844289 0.03331726407475475 5.7781125156917925
+  position -14.31325101595907 0.44950777020618804 9.110189743602314
 }
 Background {
   skyColor [

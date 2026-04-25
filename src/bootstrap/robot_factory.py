@@ -13,7 +13,7 @@ def build_webot_robot(webots_robot):
         wheel_radius=0.033,
         wheel_base=0.160,
         max_wheel_speed=6.28,
-        max_linear_speed=0.6,
+        max_linear_speed=0.20,
         max_angular_speed=1.5
     )
 

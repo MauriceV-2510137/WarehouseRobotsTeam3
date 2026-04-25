@@ -66,4 +66,4 @@ class Robot:
     # -------------------------
     def _update_pose(self):
         left_enc, right_enc = self.sensors.get_wheel_positions()
-        self.pose = self.odometry.update(left_enc, right_enc)
+        self.pose = self.odometry.update(left_enc=left_enc, right_enc=right_enc)
