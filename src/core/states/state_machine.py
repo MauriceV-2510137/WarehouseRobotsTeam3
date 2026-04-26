@@ -6,6 +6,7 @@ from core.states.state_idle import IdleState
 from core.states.state_move_to_aisle_entry import MovingToAisleEntryState
 from core.states.state_move_to_segment import MovingToSegmentState
 from core.states.state_pickup_item import PickingItemState
+from core.states.state_move_back_to_aisle_entry import MovingBackToAisleEntryState
 from core.states.state_move_to_base import MovingToBaseState
 from core.states.state_waiting_for_connection import WaitingForConnectionState
 from core.states.state_wait_for_aisle_access import WaitingForAisleState
@@ -25,6 +26,7 @@ class StateMachine:
             TransitionID.WAIT_FOR_AISLE_ACCESS: WaitingForAisleState,
             TransitionID.MOVE_TO_SEGMENT: MovingToSegmentState,
             TransitionID.PICK_ITEM: PickingItemState,
+            TransitionID.MOVE_BACK_TO_AISLE: MovingBackToAisleEntryState,
             TransitionID.MOVE_TO_BASE: MovingToBaseState,
         }
     

@@ -10,5 +10,6 @@ class TransitionID(Enum):
     WAIT_FOR_AISLE_ACCESS = auto()
     MOVE_TO_SEGMENT = auto()
     PICK_ITEM = auto()
+    MOVE_BACK_TO_AISLE = auto()
     MOVE_TO_BASE = auto()
     

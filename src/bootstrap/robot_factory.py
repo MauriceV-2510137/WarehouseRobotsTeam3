@@ -10,21 +10,20 @@ def build_webot_robot(webots_robot):
 
     # --- configuration ---
     model = RobotModel(
-        wheel_radius=0.033,
-        wheel_base=0.160,
-        max_wheel_speed=6.28,
-        max_linear_speed=0.20,
-        max_angular_speed=1.5
+        wheel_radius=0.033,     # metres
+        wheel_base=0.160,       # metres
+        max_wheel_speed=6.28,   # rad/s
+        max_linear_speed=0.20,  # m/s
+        max_angular_speed=1.5   # rad/s
     )
 
-    # --- Infrastructure layer ---
+    # --- Infrastructure layer (Webots-specific) ---
     hardware = WebotsHardware(webots_robot, model)
-
     motion = WebotsMotionController(hardware)
     sensors = WebotsSensorsController(hardware)
     comm = MqttRobotClient("default")
 
-    # --- PURE Robot (no knowledge of Webots exists inside it) ---
+    # --- Core robot (no Webots knowledge inside) ---
     return Robot(
         motion=motion,
         sensors=sensors,
@@ -34,5 +33,9 @@ def build_webot_robot(webots_robot):
 
 
 def build_actual_robot(robot):
-    # Example of where you would build the real physical robot
+    """
+    Placeholder for the real-hardware build path.
+    Swap in hardware-specific implementations of IMotionController,
+    ISensorsController, and IRobotComm here; the Robot core is unchanged.
+    """
     pass

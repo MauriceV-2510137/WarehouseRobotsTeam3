@@ -9,10 +9,11 @@ from core.events import TaskReceivedEvent, AisleResponseEvent
 class MqttRobotClient(IRobotComm):
 
     def __init__(self, robot_id: str, broker_host="localhost"):
+        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+
         self.robot_id = robot_id
         self.broker_host = broker_host
 
-        self.client = mqtt.Client()
         self._connected = False
         self._running = False
 
@@ -66,13 +67,6 @@ class MqttRobotClient(IRobotComm):
     def _on_disconnect(self, client, userdata, rc):
         self._connected = False
         print("[MQTT] Disconnected")
-
-        if self._running:
-            print("[MQTT] Attempting reconnect...")
-            try:
-                self.client.reconnect()
-            except Exception as e:
-                print(f"[MQTT] Reconnect failed: {e}")
 
     def _subscribe(self):
         self.client.subscribe(f"robot/{self.robot_id}/task/assign")

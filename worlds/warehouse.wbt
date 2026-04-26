@@ -138,7 +138,6 @@ DEF WALL Solid {
   boundingObject USE WALL_LEFT_RIGHT_SHAPE
 }
 TurtleBot3Burger {
-  translation 0 0 0.01
   name "Vrooeeeemmmmm"
   controller "robot_controller"
 }

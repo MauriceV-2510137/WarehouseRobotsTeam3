@@ -9,11 +9,12 @@ from core.task import Task
 class MqttServerClient(IServerComm):
 
     def __init__(self, broker_host="localhost"):
-        self.client = mqtt.Client()
-        self._connected = False
-        self._running = True
+        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
         self.broker_host = broker_host
+
+        self._connected = False
+        self._running = True
 
         self._on_heartbeat = None
         self._on_aisle_request = None
@@ -66,13 +67,6 @@ class MqttServerClient(IServerComm):
     def _on_disconnect(self, client, userdata, rc):
         self._connected = False
         print("[MQTT] Disconnected")
-
-        if self._running:
-            print("[MQTT] Attempting reconnect...")
-            try:
-                self.client.reconnect()
-            except Exception as e:
-                print(f"[MQTT] Reconnect failed: {e}")
 
     def _subscribe(self):
         self.client.subscribe("robot/+/heartbeat")
