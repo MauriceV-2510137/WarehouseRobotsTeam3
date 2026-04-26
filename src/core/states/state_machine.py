@@ -26,7 +26,7 @@ class StateMachine:
             TransitionID.WAIT_FOR_AISLE_ACCESS: WaitingForAisleState,
             TransitionID.MOVE_TO_SEGMENT: MovingToSegmentState,
             TransitionID.PICK_ITEM: PickingItemState,
-            TransitionID.MOVE_BACK_TO_AISLE: MovingBackToAisleEntryState,
+            TransitionID.MOVE_BACK_TO_AISLE_ENTRY: MovingBackToAisleEntryState,
             TransitionID.MOVE_TO_BASE: MovingToBaseState,
         }
     

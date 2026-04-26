@@ -23,7 +23,7 @@ class PickingItemState(IRobotState):
         self.elapsed += dt
 
         if self.elapsed >= self.wait_duration:
-            return TransitionID.MOVE_BACK_TO_AISLE
+            return TransitionID.MOVE_BACK_TO_AISLE_ENTRY
 
         return TransitionID.NO_TRANSITION
 
