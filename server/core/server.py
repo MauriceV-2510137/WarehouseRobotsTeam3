@@ -1,4 +1,5 @@
 from server.core.event_queue import EventQueue
+from server.core.aisle_manager import AisleManager
 from server.core.robot_registry import RobotRegistry
 from server.core.events import (
     HeartbeatEvent,
@@ -12,6 +13,7 @@ class Server:
         self.comm = comm
 
         self.event_queue = EventQueue()
+        self.aisle_manager = AisleManager(lock_timeout=300)
         self.robot_registry = RobotRegistry()
 
         self._running = True
@@ -57,6 +59,9 @@ class Server:
     def update(self, dt: float):
         self._process_events()
 
+        # Periodically clean up expired locks
+        self.aisle_manager.cleanup_expired_locks()
+
     def _on_heartbeat(self, event: HeartbeatEvent):
         self.robot_registry.update_heartbeat(event.robot_id, event.pose, event.task_id)
         print(f"[{event.robot_id}] pose={event.pose}")
@@ -65,13 +70,23 @@ class Server:
         self.robot_registry.update_task_status(event.robot_id, event.task_id, event.status.name)
         print(f"[{event.robot_id}] task={event.task_id} -> {event.status}")
 
+        if event.status.name in ["DONE", "REJECTED"]:
+            self.aisle_manager.release_robot(event.robot_id)
+
     def _on_aisle_request(self, event: AisleRequestEvent):
         print(f"[{event.robot_id}] requests aisle {event.aisle_id}")
 
-        # placeholder decision (now just accepting every request)
-        granted = True
+        granted = self.aisle_manager.request_aisle(
+            robot_id=event.robot_id,
+            aisle_id=event.aisle_id,
+            task_id=event.task_id
+        )
+
         if granted:
             self.robot_registry.set_aisle(event.robot_id, event.aisle_id)
+            print(f"[AisleManager] GRANTED aisle {event.aisle_id} to robot {event.robot_id}")
+        else:
+            print(f"[AisleManager] DENIED aisle {event.aisle_id} to robot {event.robot_id} (already locked)")
 
         self.comm.respond_aisle(
             robot_id=event.robot_id,
