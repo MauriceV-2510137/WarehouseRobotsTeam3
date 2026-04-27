@@ -13,8 +13,8 @@ class Server:
         self.comm = comm
         self._running = True
 
-        self.robot_reqistry = RobotRegistry()
-        self.robot_tracker = RobotTracker(self.robot_reqistry)
+        self.robot_registry = RobotRegistry()
+        self.robot_tracker = RobotTracker(self.robot_registry)
         
         self.event_queue = EventQueue()
         self._event_listeners: List[Callable[[Event], None]] = []

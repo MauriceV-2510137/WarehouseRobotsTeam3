@@ -8,7 +8,9 @@ dependencies = [
     "pytest",
     "pytest-asyncio",
     "paho-mqtt",
-    "numpy"
+    "numpy",
+    "fastapi",
+    "uvicorn"
 ]
 
 [tool.setuptools]

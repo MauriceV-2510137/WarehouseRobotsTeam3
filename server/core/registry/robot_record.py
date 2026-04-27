@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 from core.pose import Pose
-from core.registry.robot_server_status import RobotServerStatus
+from server.core.registry.robot_server_status import RobotServerStatus
 
 @dataclass
 class RobotRecord:

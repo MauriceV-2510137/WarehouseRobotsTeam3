@@ -64,7 +64,7 @@ class MqttRobotClient(IRobotComm):
             self._connected = False
             print(f"[MQTT] Connection failed (rc={reason_code})")
 
-    def _on_disconnect(self, client, userdata, flags, reason_code, properties):
+    def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties):
         self._connected = False
         print("[MQTT] Disconnected")
 

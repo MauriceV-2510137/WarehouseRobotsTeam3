@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from core.registry.robot_record import RobotRecord
-from core.registry.robot_server_status import RobotServerStatus
+from server.core.registry.robot_record import RobotRecord
+from server.core.registry.robot_server_status import RobotServerStatus
 
 class RobotRegistry:
     
