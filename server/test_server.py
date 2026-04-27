@@ -36,20 +36,34 @@ client.connect("localhost")
 
 client.loop_start()
 
-client.subscribe("robot/default/heartbeat")
+client.subscribe("robot/+/heartbeat")
 client.subscribe("aisle/+/request")
 
 time.sleep(5)
 
 # Send task
-print("SERVER SENDING: t1, segment: [5.0, 5.0], base: [0.0, 0.0]")
+print("SERVER SENDING: t1, segment: [6.5, -4.0], base: [0.0, 0.0]")
 client.publish(
-    "robot/default/task/assign",
+    "robot/robot_1/task/assign",
     json.dumps({
         "task_id": "t1",
         "aisle_id": "a1",
         "aisle_pos": [3, -4],
         "segment_pos": [6.5, -4],
+        "base_pos": [0.0, 0.0]
+    })
+)
+
+time.sleep(5)
+
+print("SERVER SENDING: t2, segment: [4.5, 0.0], base: [0.0, 0.0]")
+client.publish(
+    "robot/robot_5/task/assign",
+    json.dumps({
+        "task_id": "t2",
+        "aisle_id": "a1",
+        "aisle_pos": [3, 0],
+        "segment_pos": [4.5, 0],
         "base_pos": [0.0, 0.0]
     })
 )

@@ -14,13 +14,14 @@ from interfaces.sensors_controller import ISensorsController
 
 class Robot:
     
-    def __init__(self, motion, sensors : ISensorsController, comm : IRobotComm, model : RobotModel):
+    def __init__(self, motion, sensors : ISensorsController, comm : IRobotComm, model : RobotModel, initial_pose = None):
         self.motion = motion
         self.sensors = sensors
         self.comm = comm
 
-        self.pose = Pose()
+        self.pose = initial_pose or Pose()
         self.odometry = OdometryEstimator(model)
+        self.odometry.reset(initial_pose)
         self.navigator = Navigator(model)
 
         self.task_manager = TaskManager()

@@ -11,8 +11,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation -0.001759149220132727 -0.9994432776844289 0.03331726407475475 5.7781125156917925
-  position -14.31325101595907 0.44950777020618804 9.110189743602314
+  orientation -0.004880069516961535 -0.9989567091077632 0.04540570724146485 5.777866497204882
+  position -13.583132229999709 0.22305275435015082 9.237240972667685
 }
 Background {
   skyColor [
@@ -138,8 +138,34 @@ DEF WALL Solid {
   boundingObject USE WALL_LEFT_RIGHT_SHAPE
 }
 TurtleBot3Burger {
-  name "Vrooeeeemmmmm"
+  translation 0 1 0.01
+  name "robot_1"
   controller "robot_controller"
+  customData "0.0,1.0,0.0"
+}
+TurtleBot3Burger {
+  translation 0 0.5 0.01
+  name "robot_2"
+  controller "robot_controller"
+  customData "0.0,0.5,0.0"
+}
+TurtleBot3Burger {
+  translation 0 0 0.01
+  name "robot_3"
+  controller "robot_controller"
+  customData "0.0,0.0,0.0"
+}
+TurtleBot3Burger {
+  translation 0 -0.5 0.01
+  name "robot_4"
+  controller "robot_controller"
+  customData "0.0,-0.5,0.0"
+}
+TurtleBot3Burger {
+  translation 0 -1 0.01
+  name "robot_5"
+  controller "robot_controller"
+  customData "0.0,-1.0,0.0"
 }
 WoodenBox {
   translation 5.5 -1 0.3

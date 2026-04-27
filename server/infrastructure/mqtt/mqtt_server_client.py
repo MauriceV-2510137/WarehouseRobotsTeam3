@@ -54,17 +54,17 @@ class MqttServerClient(IServerComm):
     # -------------------------
     # MQTT callbacks
     # -------------------------
-    def _on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
+    def _on_connect(self, client, userdata, flags, reason_code, properties):
+        if reason_code == 0:
             self._connected = True
             self._subscribe()
             print("[MQTT] Connected successfully")
         
         else:
             self._connected = False
-            print(f"[MQTT] Connection failed (rc={rc})")
+            print(f"[MQTT] Connection failed (rc={reason_code})")
 
-    def _on_disconnect(self, client, userdata, rc):
+    def _on_disconnect(self, client, userdata, reason_code, properties):
         self._connected = False
         print("[MQTT] Disconnected")
 
