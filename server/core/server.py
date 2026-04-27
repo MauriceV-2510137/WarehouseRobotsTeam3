@@ -4,15 +4,18 @@ from server.core.events import (
     TaskStatusEvent,
     AisleRequestEvent,
 )
+from server.core.registry import RobotRegistry, RobotTracker
+
 class Server:
 
     def __init__(self, comm):
         self.comm = comm
-
-        self.event_queue = EventQueue()
-
         self._running = True
+
+        self.robot_reqistry = RobotRegistry()
+        self.robot_tracker = RobotTracker(self.robot_reqistry)
         
+        self.event_queue = EventQueue()
         self._bind_events()
 
     # -------------------------
@@ -36,7 +39,7 @@ class Server:
     # Events
     # -------------------------
     def _process_events(self):
-        for event in self.event_queue.poll_all():
+        for event in self.event_queue.poll_all(): # for now these just to print things out + accept aisle requests
 
             if isinstance(event, HeartbeatEvent):
                 self._on_heartbeat(event)
@@ -46,6 +49,8 @@ class Server:
 
             elif isinstance(event, AisleRequestEvent):
                 self._on_aisle_request(event)
+        
+        self.robot_tracker.handle_event(event)
 
     # -------------------------
     # LOGIC
@@ -53,6 +58,7 @@ class Server:
 
     def update(self, dt: float):
         self._process_events()
+        self.robot_tracker.update()
 
     def _on_heartbeat(self, event: HeartbeatEvent):
         print(f"[{event.robot_id}] pose={event.pose}")
