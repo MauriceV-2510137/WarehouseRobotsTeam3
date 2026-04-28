@@ -112,7 +112,6 @@ class MqttServerClient(IServerComm):
                 "aisle_id": task.aisle_id,
                 "aisle_pos": task.aisle_pos,
                 "segment_pos": task.segment_pos,
-                "base_pos": task.base_pos,
             }),
             qos=1
         )

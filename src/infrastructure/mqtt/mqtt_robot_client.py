@@ -156,7 +156,6 @@ class MqttRobotClient(IRobotComm):
                 id=payload["task_id"],
                 aisle_id=payload["aisle_id"],
                 aisle_pos=tuple(payload["aisle_pos"]),
-                segment_pos=tuple(payload["segment_pos"]),
-                base_pos=tuple(payload["base_pos"]),
+                segment_pos=tuple(payload["segment_pos"])
             )
         )

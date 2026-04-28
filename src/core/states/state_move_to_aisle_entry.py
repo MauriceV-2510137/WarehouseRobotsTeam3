@@ -10,8 +10,6 @@ class MovingToAisleEntryState(IRobotState):
         if not task:
             return
 
-        print(f"Moving to aisle: {task.aisle_pos}")
-
         robot.task_manager.start_task()
         robot.comm.publish_task_status(task.id, TaskStatus.IN_PROGRESS)
         robot.navigator.set_target(*task.aisle_pos)

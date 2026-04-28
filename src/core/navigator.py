@@ -2,7 +2,6 @@ import math
 from core.pose import Pose
 from core.robot_model import RobotModel
 
-
 class Navigator:
 
     def __init__(self, model: RobotModel) -> None:

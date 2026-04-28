@@ -22,6 +22,7 @@ class Robot:
 
         self.pose = initial_pose or Pose()
         self.odometry = OdometryEstimator(model)
+        self.initial_pose: Pose = initial_pose or Pose()
         self.odometry.reset(initial_pose)
         self.navigator = Navigator(model)
 
@@ -43,7 +44,7 @@ class Robot:
         self.comm.set_task_received_callback(self.event_queue.publish)
         self.comm.set_aisle_response_callback(self.event_queue.publish)
 
-    def _setup_scheduler(self) -> None: # Heartbeat / health check
+    def _setup_scheduler(self) -> None:
         heartbeat_task = ScheduledTask(interval_s=0.5, callback=self.telemetry.publish_heartbeat)
         self.scheduler.add(heartbeat_task)
 

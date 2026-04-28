@@ -10,7 +10,6 @@ class MovingBackToAisleEntryState(IRobotState):
         if not task:
             return
 
-        print(f"Moving to aisle: {task.aisle_pos}")
         robot.navigator.set_target(*task.aisle_pos)
 
     def on_exit(self, robot) -> None:

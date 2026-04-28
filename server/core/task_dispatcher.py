@@ -46,7 +46,6 @@ class TaskDispatcher:
             aisle_id=f"aisle_{record.aisle}",
             aisle_pos=list(location.aisle_pos),
             segment_pos=list(location.segment_pos),
-            base_pos=[robot.pose.x, robot.pose.y],
         )
 
         record.robot_id = robot.robot_id

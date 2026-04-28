@@ -1,8 +1,9 @@
 from fastapi import Request
 
 from server.core.registry import RobotRegistry
-from server.core.task_dispatcher import TaskDispatcher
 from server.core.task_store import TaskStore
+from server.core.task_dispatcher import TaskDispatcher
+from server.core.aisle.aisle_manager import AisleManager
 
 def get_registry(request: Request) -> RobotRegistry:
     return request.app.state.server.robot_registry
@@ -12,3 +13,6 @@ def get_task_store(request: Request) -> TaskStore:
 
 def get_task_dispatcher(request: Request) -> TaskDispatcher:
     return request.app.state.server.task_dispatcher
+
+def get_aisle_manager(request: Request) -> AisleManager:
+    return request.app.state.server.aisle_manager

@@ -10,8 +10,7 @@ class MovingToBaseState(IRobotState):
         if not task:
             return
 
-        print("Returning to base")
-        robot.navigator.set_target(*task.base_pos)
+        robot.navigator.set_target(robot.initial_pose.x, robot.initial_pose.y)
 
     def on_exit(self, robot) -> None:
         robot.motion.stop()

@@ -14,7 +14,6 @@ class PickingItemState(IRobotState):
         self.wait_duration = random.uniform(5, 10)
         self.elapsed = 0.0
         robot.motion.stop()
-        print("Picking item...")
 
     def on_exit(self, robot) -> None:
         self.elapsed = 0.0

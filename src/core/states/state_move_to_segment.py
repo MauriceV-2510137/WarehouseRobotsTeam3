@@ -9,8 +9,6 @@ class MovingToSegmentState(IRobotState):
         task = robot.task_manager.get_task()
         if not task:
             return
-
-        print(f"Moving to shelf: {task.segment_pos}")
         robot.navigator.set_target(*task.segment_pos)
 
     def on_exit(self, robot) -> None:

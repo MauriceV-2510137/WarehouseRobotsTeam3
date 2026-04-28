@@ -17,6 +17,5 @@ class Task:
 
     aisle_pos: tuple[float, float]
     segment_pos: tuple[float, float]
-    base_pos: tuple[float, float]
 
     status: TaskStatus = TaskStatus.PENDING
