@@ -12,13 +12,13 @@ from core.states.state_waiting_for_connection import WaitingForConnectionState
 from core.states.state_wait_for_aisle_access import WaitingForAisleState
 
 class StateMachine:
-    def __init__(self, robot, initial_state: TransitionID):
+    def __init__(self, robot, initial_state: TransitionID) -> None:
         self._robot = robot
         self._registry = self._build_registry()
         self._state = self._create(initial_state)
         self._state.on_enter(robot)
 
-    def _build_registry(self):
+    def _build_registry(self) -> dict[TransitionID, type[IRobotState]]:
         return {
             TransitionID.WAIT_CONNECTION: WaitingForConnectionState,
             TransitionID.IDLE: IdleState,
@@ -34,22 +34,22 @@ class StateMachine:
         state_cls = self._registry.get(state_id, IdleState)
         return state_cls()
 
-    def _switch(self, next_state_id: TransitionID):
+    def _switch(self, next_state_id: TransitionID) -> None:
         self._state.on_exit(self._robot)
         self._state = self._create(next_state_id)
         self._state.on_enter(self._robot)
 
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         result = self._state.update(self._robot, dt)
         if result == TransitionID.NO_TRANSITION:
             return
         self._switch(result)
 
-    def handle_event(self, event: Event):
+    def handle_event(self, event: Event) -> None:
         self._state.on_event(self._robot, event)
 
-    def force_state(self, state_id: TransitionID):
+    def force_state(self, state_id: TransitionID) -> None:
         self._switch(state_id)
 
-    def get_state(self):
+    def get_state(self) -> IRobotState:
         return self._state

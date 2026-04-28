@@ -6,7 +6,7 @@ from core.task import TaskStatus
 
 class PickingItemState(IRobotState):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.wait_duration = 0.0
         self.elapsed = 0.0
 
@@ -16,7 +16,7 @@ class PickingItemState(IRobotState):
         robot.motion.stop()
         print("Picking item...")
 
-    def on_exit(self, robot):
+    def on_exit(self, robot) -> None:
         self.elapsed = 0.0
 
     def update(self, robot, dt: float) -> TransitionID:
@@ -27,6 +27,6 @@ class PickingItemState(IRobotState):
 
         return TransitionID.NO_TRANSITION
 
-    def on_event(self, robot, event):
+    def on_event(self, robot, event) -> None:
         if isinstance(event, TaskReceivedEvent):
             robot.comm.publish_task_status(event.task.id, TaskStatus.REJECTED, reason="Robot already has active task")

@@ -8,14 +8,13 @@ class WebotsSensorsController(ISensorsController):
     Keeps the robot core fully independent from the Webots API.
     """
 
-    def __init__(self, hardware):
+    def __init__(self, hardware) -> None:
         self.hardware = hardware
         self._max_range = None   # lazily initialised on first scan
 
     # -------------------------------------------------------------------
     # Internal helpers
     # -------------------------------------------------------------------
-
     def _get_max_range(self) -> float:
         if self._max_range is None:
             meta = self.hardware.get_lidar_meta()
@@ -46,7 +45,6 @@ class WebotsSensorsController(ISensorsController):
     # -------------------------------------------------------------------
     # Semantic distances
     # -------------------------------------------------------------------
-
     def get_front_distance(self) -> float:
         """
         Minimum range in the forward 30-degree cone (+/-15 deg around +X).
@@ -90,7 +88,6 @@ class WebotsSensorsController(ISensorsController):
     # -------------------------------------------------------------------
     # Orientation
     # -------------------------------------------------------------------
-
     def get_yaw(self) -> float:
         """
         Returns the compass-based heading in radians.
@@ -102,7 +99,6 @@ class WebotsSensorsController(ISensorsController):
     # -------------------------------------------------------------------
     # IMU
     # -------------------------------------------------------------------
-
     def get_gyro(self) -> list:
         """[wx, wy, wz] angular velocity in rad/s (robot local frame)."""
         return self.hardware.get_gyro()
@@ -114,7 +110,6 @@ class WebotsSensorsController(ISensorsController):
     # -------------------------------------------------------------------
     # Wheel encoders
     # -------------------------------------------------------------------
-
     def get_wheel_positions(self) -> tuple:
         """Returns (left_rad, right_rad) cumulative wheel angles in radians."""
         return self.hardware.get_wheel_positions()

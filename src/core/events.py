@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from core.task import Task
 
+@dataclass
 class Event:
     pass
 

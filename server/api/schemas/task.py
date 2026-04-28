@@ -1,7 +1,4 @@
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -14,6 +11,6 @@ class TaskSchema(BaseModel):
     aisle: int
     shelf: int
     status: str
-    robot_id: Optional[str]
+    robot_id: str | None
     created_at: datetime
     updated_at: datetime

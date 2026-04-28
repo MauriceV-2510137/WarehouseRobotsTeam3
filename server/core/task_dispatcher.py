@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import math
 import uuid
 from collections import deque
@@ -11,9 +9,10 @@ from server.core.registry.robot_server_status import RobotServerStatus
 from server.core.task_store import TaskRecord, TaskStore
 from server.core.warehouse.warehouse_map import WarehouseMap
 
+from server.interfaces.server_comm import IServerComm
 
 class TaskDispatcher:
-    def __init__(self, registry: RobotRegistry, task_store: TaskStore, comm, warehouse_map: WarehouseMap) -> None:
+    def __init__(self, registry: RobotRegistry, task_store: TaskStore, comm: IServerComm, warehouse_map: WarehouseMap) -> None:
         self._registry = registry
         self._task_store = task_store
         self._comm = comm
@@ -54,7 +53,6 @@ class TaskDispatcher:
         robot.status = RobotServerStatus.BUSY  # optimistic update; corrected by tracker on next heartbeat
 
         self._comm.assign_task(robot.robot_id, task)
-
 
 def _closest_robot(robots: list[RobotRecord], target: tuple[float, float]) -> RobotRecord:
     tx, ty = target

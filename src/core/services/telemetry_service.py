@@ -1,8 +1,8 @@
 class TelemetryService:
-    def __init__(self, robot):
+    def __init__(self, robot) -> None:
         self.robot = robot
 
-    def publish_heartbeat(self):
+    def publish_heartbeat(self) -> None:
         if not self.robot.comm.is_connected():
             return
 

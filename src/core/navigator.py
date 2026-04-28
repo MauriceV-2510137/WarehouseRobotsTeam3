@@ -5,10 +5,10 @@ from core.robot_model import RobotModel
 
 class Navigator:
 
-    def __init__(self, model: RobotModel):
+    def __init__(self, model: RobotModel) -> None:
         self._model = model
 
-        self.target: tuple | None = None
+        self.target: tuple[float, float] | None = None
         self._reached_target = False
 
         self.position_tolerance = 0.09   # metres -- arrived if closer than this
@@ -20,7 +20,6 @@ class Navigator:
     # -------------------------------------------------------------------
     # Target management
     # -------------------------------------------------------------------
-
     def set_target(self, x: float, y: float) -> None:
         self.target = (x, y)
         self._reached_target = False
@@ -45,7 +44,6 @@ class Navigator:
     # -------------------------------------------------------------------
     # Velocity computation
     # -------------------------------------------------------------------
-
     def compute(self, pose: Pose) -> tuple[float, float]:
         if self.target is None:
             return 0.0, 0.0

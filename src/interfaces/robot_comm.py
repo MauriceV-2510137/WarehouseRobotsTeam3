@@ -11,11 +11,11 @@ AisleCallback = Callable[[AisleResponseEvent], None]
 class IRobotComm(ABC):
 
     @abstractmethod
-    def connect(self):
+    def connect(self) -> None:
         pass
 
     @abstractmethod
-    def disconnect(self):
+    def disconnect(self) -> None:
         pass
 
     @abstractmethod
@@ -23,15 +23,19 @@ class IRobotComm(ABC):
         pass
 
     @abstractmethod
-    def publish_heartbeat(self, task: Task | None, pose: Pose):
+    def publish_heartbeat(self, task: Task | None, pose: Pose) -> None:
         pass
 
     @abstractmethod
-    def publish_task_status(self, task_id: str, status: TaskStatus, reason: str | None = None):
+    def publish_task_status(self, task_id: str, status: TaskStatus, reason: str | None = None) -> None:
         pass
 
     @abstractmethod
-    def request_aisle(self, robot_id: str, aisle_id: str, task_id: str):
+    def request_aisle(self, robot_id: str, aisle_id: str, task_id: str) -> None:
+        pass
+
+    @abstractmethod
+    def release_aisle(self, robot_id: str, aisle_id: str) -> None:
         pass
 
     @abstractmethod

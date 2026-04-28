@@ -10,11 +10,12 @@ from core.navigator import Navigator
 from core.event_queue import EventQueue
 
 from interfaces.robot_comm import IRobotComm
+from interfaces.motion_controller import IMotionController
 from interfaces.sensors_controller import ISensorsController
 
 class Robot:
     
-    def __init__(self, motion, sensors : ISensorsController, comm : IRobotComm, model : RobotModel, initial_pose = None):
+    def __init__(self, motion: IMotionController, sensors : ISensorsController, comm : IRobotComm, model : RobotModel, initial_pose: Pose | None = None) -> None:
         self.motion = motion
         self.sensors = sensors
         self.comm = comm
@@ -38,25 +39,25 @@ class Robot:
     # -------------------------
     # Wiring
     # -------------------------
-    def _bind_events(self):
+    def _bind_events(self) -> None:
         self.comm.set_task_received_callback(self.event_queue.publish)
         self.comm.set_aisle_response_callback(self.event_queue.publish)
 
-    def _setup_scheduler(self): # Heartbeat / health check
+    def _setup_scheduler(self) -> None: # Heartbeat / health check
         heartbeat_task = ScheduledTask(interval_s=0.5, callback=self.telemetry.publish_heartbeat)
         self.scheduler.add(heartbeat_task)
 
     # -------------------------
     # Events
     # -------------------------
-    def _process_events(self):
+    def _process_events(self) -> None:
         for event in self.event_queue.poll_all():
             self.state_machine.handle_event(event)
 
     # -------------------------
     # Sensors / pose
     # -------------------------
-    def _update_pose(self):
+    def _update_pose(self) -> None:
         left_enc, right_enc = self.sensors.get_wheel_positions()
         heading = self.sensors.get_yaw() 
         self.pose = self.odometry.update(left_enc, right_enc, true_heading=heading)
@@ -64,7 +65,7 @@ class Robot:
     # -------------------------
     # Main loop
     # -------------------------
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         self._update_pose()
         self._process_events()
         self.state_machine.update(dt)

@@ -1,20 +1,20 @@
-from dataclasses import dataclass
-from typing import Callable, List
+from dataclasses import dataclass, field
+from typing import Callable
 
 @dataclass
 class ScheduledTask:
     interval_s: float
-    callback: Callable
-    accumulator: float = 0.0
+    callback: Callable[[], None]
+    accumulator: float = field(default=0.0)
 
 class Scheduler:
-    def __init__(self):
-        self.tasks: List[ScheduledTask] = []
+    def __init__(self) -> None:
+        self.tasks: list[ScheduledTask] = []
 
-    def add(self, task: ScheduledTask):
+    def add(self, task: ScheduledTask) -> None:
         self.tasks.append(task)
 
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         for task in self.tasks:
 
             task.accumulator += dt

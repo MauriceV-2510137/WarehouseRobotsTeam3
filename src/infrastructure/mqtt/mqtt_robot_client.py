@@ -2,13 +2,13 @@ import json
 import paho.mqtt.client as mqtt
 
 from interfaces.robot_comm import IRobotComm, TaskCallback, AisleCallback
+from core.events import TaskReceivedEvent, AisleResponseEvent
 from core.task import Task, TaskStatus
 from core.pose import Pose
-from core.events import TaskReceivedEvent, AisleResponseEvent
 
 class MqttRobotClient(IRobotComm):
 
-    def __init__(self, robot_id: str, broker_host="localhost"):
+    def __init__(self, robot_id: str, broker_host="localhost") -> None:
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
         self.robot_id = robot_id
@@ -29,7 +29,7 @@ class MqttRobotClient(IRobotComm):
     # -------------------------
     # Lifecycle
     # -------------------------
-    def connect(self):
+    def connect(self) -> None:
         print("[MQTT] Starting async connection...")
         self._running = True
         try:
@@ -39,7 +39,7 @@ class MqttRobotClient(IRobotComm):
             self._connected = False
             print(f"[MQTT] Initial connection error: {e}")
         
-    def disconnect(self):
+    def disconnect(self) -> None:
         print("[MQTT] Disconnecting...")
         self._running = False
         try:
@@ -54,28 +54,27 @@ class MqttRobotClient(IRobotComm):
     # -------------------------
     # MQTT callbacks
     # -------------------------
-    def _on_connect(self, client, userdata, flags, reason_code, properties):
+    def _on_connect(self, client, userdata, flags, reason_code, properties) -> None:
         if reason_code == 0:
             self._connected = True
             self._subscribe()
             print("[MQTT] Connected successfully")
-            
         else:
             self._connected = False
             print(f"[MQTT] Connection failed (rc={reason_code})")
 
-    def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties):
+    def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties) -> None:
         self._connected = False
         print("[MQTT] Disconnected")
 
-    def _subscribe(self):
+    def _subscribe(self) -> None:
         self.client.subscribe(f"robot/{self.robot_id}/task/assign")
         self.client.subscribe(f"robot/{self.robot_id}/aisle/response")
 
     # -------------------------
     # Publish API
     # -------------------------
-    def publish_heartbeat(self, task: Task | None, pose: Pose):
+    def publish_heartbeat(self, task: Task | None, pose: Pose) -> None:
         self.client.publish(
             f"robot/{self.robot_id}/heartbeat",
             json.dumps({
@@ -86,7 +85,7 @@ class MqttRobotClient(IRobotComm):
             retain=False
         )
 
-    def publish_task_status(self, task_id, status: TaskStatus, reason=None):
+    def publish_task_status(self, task_id: str, status: TaskStatus, reason: str | None = None) -> None:
         payload = {
             "task_id": task_id,
             "status": status.name,
@@ -99,7 +98,7 @@ class MqttRobotClient(IRobotComm):
             qos=1
         )
 
-    def request_aisle(self, robot_id, aisle_id, task_id):
+    def request_aisle(self, robot_id: str, aisle_id: str, task_id: str) -> None:
         payload = {
             "robot_id": robot_id,
             "aisle_id": aisle_id,
@@ -112,7 +111,7 @@ class MqttRobotClient(IRobotComm):
             qos=1
         )
 
-    def release_aisle(self, robot_id, aisle_id):
+    def release_aisle(self, robot_id: str, aisle_id: str) -> None:
         payload = {
             "robot_id": robot_id,
             "aisle_id": aisle_id
@@ -136,7 +135,7 @@ class MqttRobotClient(IRobotComm):
     # -------------------------
     # MQTT handler
     # -------------------------
-    def _on_message(self, client, userdata, msg):
+    def _on_message(self, client, userdata, msg) -> None:
         topic = msg.topic
         
         try:
@@ -171,7 +170,7 @@ class MqttRobotClient(IRobotComm):
                 id=payload["task_id"],
                 aisle_id=payload["aisle_id"],
                 aisle_pos=tuple(payload["aisle_pos"]),
-                segment_pos= tuple(payload["segment_pos"]),
+                segment_pos=tuple(payload["segment_pos"]),
                 base_pos=tuple(payload["base_pos"]),
             )
         )

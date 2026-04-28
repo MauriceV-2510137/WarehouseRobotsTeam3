@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from core.task import TaskStatus
 from core.pose import Pose
 
+@dataclass
 class Event:
     pass
 

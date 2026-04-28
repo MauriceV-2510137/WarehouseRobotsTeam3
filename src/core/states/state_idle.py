@@ -14,7 +14,7 @@ class IdleState(IRobotState):
 
         return TransitionID.NO_TRANSITION
     
-    def on_event(self, robot, event):
+    def on_event(self, robot, event) -> None:
         if isinstance(event, TaskReceivedEvent):
             try:
                 robot.task_manager.assign_task(event.task)

@@ -4,16 +4,16 @@ from core.robot_model import RobotModel
 
 class OdometryEstimator:
 
-    def __init__(self, model: RobotModel):
+    def __init__(self, model: RobotModel) -> None:
         self.r = model.wheel_radius   
         self.L = model.wheel_base     
 
-        self._prev_left  = None
-        self._prev_right = None
+        self._prev_left: float | None = None
+        self._prev_right: float | None = None
 
         self.pose = Pose()
 
-    def update(self, left_enc: float, right_enc: float, true_heading: float = None) -> Pose:
+    def update(self, left_enc: float, right_enc: float, true_heading: float | None = None) -> Pose:
         if self._prev_left is None:
             self._prev_left  = left_enc
             self._prev_right = right_enc
@@ -50,7 +50,7 @@ class OdometryEstimator:
 
         return self.pose
 
-    def reset(self, pose: Pose = None) -> None:
+    def reset(self, pose: Pose | None = None) -> None:
         self.pose = pose if pose is not None else Pose()
         self._prev_left  = None
         self._prev_right = None

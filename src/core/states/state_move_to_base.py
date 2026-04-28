@@ -30,6 +30,6 @@ class MovingToBaseState(IRobotState):
 
         return TransitionID.NO_TRANSITION
 
-    def on_event(self, robot, event):
+    def on_event(self, robot, event) -> None:
         if isinstance(event, TaskReceivedEvent):
             robot.comm.publish_task_status(event.task.id, TaskStatus.REJECTED, reason="Robot already has active task")

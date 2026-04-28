@@ -15,7 +15,7 @@ def _parse_initial_pose(custom_data: str) -> Pose:
     except Exception:
         return Pose()  # fallback to (0,0,0) if not set
 
-def build_webot_robot(webots_robot):
+def build_webot_robot(webots_robot) -> Robot:
 
     # Robot identity
     robot_id = webots_robot.getName()
@@ -46,7 +46,7 @@ def build_webot_robot(webots_robot):
     )
 
 
-def build_actual_robot(robot):
+def build_actual_robot(robot) -> Robot:
     """
     Placeholder for the real-hardware build path.
     Swap in hardware-specific implementations of IMotionController,

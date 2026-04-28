@@ -19,7 +19,7 @@ class WebotsHardware:
         Encoders      : position sensor embedded in each motor (no separate name)
     """
 
-    def __init__(self, robot, model):
+    def __init__(self, robot, model) -> None:
         self.robot = robot
         self.model = model
         self.timestep = int(robot.getBasicTimeStep())
@@ -68,14 +68,12 @@ class WebotsHardware:
     # -------------------------------------------------------------------
     # Timing
     # -------------------------------------------------------------------
-
     def get_time_step(self) -> int:
         return self.timestep
 
     # -------------------------------------------------------------------
     # Actuators
     # -------------------------------------------------------------------
-
     def set_wheel_velocity(self, left: float, right: float) -> None:
         """Set wheel angular velocities in rad/s."""
         self.left_motor.setVelocity(left)
@@ -84,7 +82,6 @@ class WebotsHardware:
     # -------------------------------------------------------------------
     # LiDAR
     # -------------------------------------------------------------------
-
     def get_lidar_scan(self) -> list:
         """
         Returns the flat list of range values (metres) for one 360 degree sweep.
@@ -111,7 +108,6 @@ class WebotsHardware:
     # -------------------------------------------------------------------
     # Orientation  (compass)
     # -------------------------------------------------------------------
-
     def get_yaw(self) -> float:
         north = self.compass.getValues()
         return math.atan2(north[0], north[1])
@@ -119,7 +115,6 @@ class WebotsHardware:
     # -------------------------------------------------------------------
     # IMU sensors
     # -------------------------------------------------------------------
-
     def get_gyro(self) -> list:
         """
         Returns [wx, wy, wz] angular velocity in rad/s in the robot's local frame.
@@ -134,7 +129,6 @@ class WebotsHardware:
     # -------------------------------------------------------------------
     # Wheel encoders
     # -------------------------------------------------------------------
-
     def get_wheel_positions(self) -> tuple:
         """
         Returns (left_rad, right_rad) -- cumulative wheel angle in radians

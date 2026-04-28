@@ -6,10 +6,10 @@ from core.events import TaskReceivedEvent
 
 class WaitingForAisleState(IRobotState):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._transition : bool = False
 
-    def on_enter(self, robot):
+    def on_enter(self, robot) -> None:
         task = robot.task_manager.get_task()
         if not task:
             return
@@ -27,15 +27,15 @@ class WaitingForAisleState(IRobotState):
         robot.motion.stop()
         print(f"Waiting for aisle {aisle_id}")
 
-    def on_exit(self, robot):
+    def on_exit(self, robot) -> None:
         self._transition = False
 
-    def update(self, robot, dt):
+    def update(self, robot, dt: float) -> TransitionID:
         if self._transition:
             return TransitionID.MOVE_TO_SEGMENT
         return TransitionID.NO_TRANSITION
     
-    def on_event(self, robot, event):
+    def on_event(self, robot, event) -> None:
         if isinstance(event, TaskReceivedEvent):
             robot.comm.publish_task_status(event.task.id, TaskStatus.REJECTED, reason="Robot already has active task")
         elif isinstance(event, AisleResponseEvent):

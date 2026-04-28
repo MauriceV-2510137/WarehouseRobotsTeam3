@@ -1,7 +1,7 @@
 from core.task import Task, TaskAlreadyAssignedError, TaskStatus
 
 class TaskManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self._current_task: Task | None = None
 
     def assign_task(self, task: Task) -> None:
@@ -19,14 +19,14 @@ class TaskManager:
     def has_task(self) -> bool:
         return self._current_task is not None
 
-    def start_task(self):
+    def start_task(self) -> None:
         if self._current_task:
             self._current_task.status = TaskStatus.IN_PROGRESS
 
-    def complete_task(self):
+    def complete_task(self) -> None:
         if self._current_task:
             self._current_task.status = TaskStatus.DONE
             self._current_task = None
 
-    def clear(self):
+    def clear(self) -> None:
         self._current_task = None

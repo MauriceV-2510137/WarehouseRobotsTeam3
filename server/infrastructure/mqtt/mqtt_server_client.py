@@ -1,7 +1,7 @@
 import json
 import paho.mqtt.client as mqtt
 
-from server.interfaces.server_comm import IServerComm
+from server.interfaces.server_comm import IServerComm, HeartbeatCallback, TaskStatusCallback, AisleRequestCallback
 from server.core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent
 from core.task import TaskStatus
 from core.pose import Pose
@@ -9,7 +9,7 @@ from core.task import Task
 
 class MqttServerClient(IServerComm):
 
-    def __init__(self, broker_host="localhost"):
+    def __init__(self, broker_host="localhost") -> None:
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
         self.broker_host = broker_host
@@ -17,9 +17,9 @@ class MqttServerClient(IServerComm):
         self._connected = False
         self._running = True
 
-        self._on_heartbeat = None
-        self._on_aisle_request = None
-        self._on_task_status = None
+        self._on_heartbeat: HeartbeatCallback | None = None
+        self._on_aisle_request: AisleRequestCallback | None = None
+        self._on_task_status: TaskStatusCallback | None = None
 
         self.client.on_connect = self._on_connect
         self.client.on_disconnect = self._on_disconnect
@@ -30,7 +30,7 @@ class MqttServerClient(IServerComm):
     # -------------------------
     # Lifecycle
     # -------------------------
-    def connect(self):
+    def connect(self) -> None:
         print("[MQTT] Starting async connection...")
         self._running = True
         try:
@@ -40,7 +40,7 @@ class MqttServerClient(IServerComm):
             self._connected = False
             print(f"[MQTT] Initial connection error: {e}")
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         print("[MQTT] Disconnecting...")
         self._running = False
         try:
@@ -55,21 +55,20 @@ class MqttServerClient(IServerComm):
     # -------------------------
     # MQTT callbacks
     # -------------------------
-    def _on_connect(self, client, userdata, flags, reason_code, properties):
+    def _on_connect(self, client, userdata, flags, reason_code, properties) -> None:
         if reason_code == 0:
             self._connected = True
             self._subscribe()
             print("[MQTT] Connected successfully")
-        
         else:
             self._connected = False
             print(f"[MQTT] Connection failed (rc={reason_code})")
 
-    def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties):
+    def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties) -> None:
         self._connected = False
         print("[MQTT] Disconnected")
 
-    def _subscribe(self):
+    def _subscribe(self) -> None:
         self.client.subscribe("robot/+/heartbeat")
         self.client.subscribe("robot/+/task/status")
         self.client.subscribe("aisle/+/request")
@@ -77,7 +76,7 @@ class MqttServerClient(IServerComm):
     # -------------------------
     # Incoming messages -> callbacks
     # -------------------------
-    def _on_message(self, client, userdata, msg):
+    def _on_message(self, client, userdata, msg) -> None:
         topic = msg.topic
 
         try:
@@ -104,7 +103,7 @@ class MqttServerClient(IServerComm):
     # -------------------------
     # Outgoing
     # -------------------------
-    def assign_task(self, robot_id: str, task: Task):
+    def assign_task(self, robot_id: str, task: Task) -> None:
         self.client.publish(
             f"robot/{robot_id}/task/assign",
             json.dumps({
@@ -116,7 +115,7 @@ class MqttServerClient(IServerComm):
             })
         )
 
-    def respond_aisle(self, robot_id, aisle_id, granted):
+    def respond_aisle(self, robot_id: str, aisle_id: str, granted: bool) -> None:
         self.client.publish(
             f"robot/{robot_id}/aisle/response",
             json.dumps({
@@ -128,20 +127,19 @@ class MqttServerClient(IServerComm):
     # -------------------------
     # Callback setters
     # -------------------------
-    def set_heartbeat_callback(self, cb):
+    def set_heartbeat_callback(self, cb: HeartbeatCallback) -> None:
         self._on_heartbeat = cb
 
-    def set_aisle_request_callback(self, cb):
+    def set_aisle_request_callback(self, cb: AisleRequestCallback) -> None:
         self._on_aisle_request = cb
 
-    def set_task_status_callback(self, cb):
+    def set_task_status_callback(self, cb: TaskStatusCallback) -> None:
         self._on_task_status = cb
-
 
     # -------------------------
     # Parsing
     # -------------------------
-    def _parse_heartbeat(self, topic, payload):
+    def _parse_heartbeat(self, topic, payload) -> HeartbeatEvent:
         robot_id = topic.split("/")[1]
 
         pose = Pose(*payload["pose"])
@@ -152,7 +150,7 @@ class MqttServerClient(IServerComm):
             task_id=payload["task_id"]
         )
 
-    def _parse_task_status(self, topic, payload):
+    def _parse_task_status(self, topic, payload) -> TaskStatusEvent:
         robot_id = topic.split("/")[1]
 
         return TaskStatusEvent(
@@ -162,7 +160,7 @@ class MqttServerClient(IServerComm):
             reason=payload.get("reason")
         )
 
-    def _parse_aisle_request(self, payload):
+    def _parse_aisle_request(self, payload) -> AisleRequestEvent:
         return AisleRequestEvent(
             robot_id=payload["robot_id"],
             aisle_id=payload["aisle_id"],

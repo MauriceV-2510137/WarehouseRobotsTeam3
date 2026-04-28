@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from server.core.registry.robot_record import RobotRecord
 from server.core.registry.robot_registry import RobotRegistry
 from server.core.registry.robot_server_status import RobotServerStatus
-from server.core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent, Event
+from server.core.events import HeartbeatEvent, TaskStatusEvent, Event
 from core.task import TaskStatus
 
 OFFLINE_CUTOFF_S = 4.0 # x seconds without any hearthbeat -> robot set offline
@@ -24,7 +22,7 @@ class RobotTracker:
         elif isinstance(event, TaskStatusEvent):
             self._on_task_status(event)
 
-    def update(self):
+    def update(self) -> None:
         cutoff = datetime.now() - timedelta(seconds=OFFLINE_CUTOFF_S)
 
         for record in self._registry.get_all():

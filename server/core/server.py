@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Callable, List
+from typing import Callable
 
 from server.core.event_queue import EventQueue
 from server.core.events import Event, HeartbeatEvent, TaskStatusEvent, AisleRequestEvent
@@ -8,10 +6,11 @@ from server.core.registry import RobotRegistry, RobotTracker
 from server.core.warehouse import WarehouseMap
 from server.core.task_dispatcher import TaskDispatcher
 from server.core.task_store import TaskStore
+from server.interfaces.server_comm import IServerComm
 
 class Server:
 
-    def __init__(self, comm):
+    def __init__(self, comm: IServerComm) -> None:
         self.comm = comm
         self._running = True
 
@@ -22,13 +21,13 @@ class Server:
         self.task_dispatcher = TaskDispatcher(self.robot_registry, self.task_store, self.comm, WarehouseMap())
         
         self.event_queue = EventQueue()
-        self._event_listeners: List[Callable[[Event], None]] = []
+        self._event_listeners: list[Callable[[Event], None]] = []
         self._bind_events()
 
     # -------------------------
     # Lifecycle
     # -------------------------
-    def stop(self):
+    def stop(self) -> None:
         self._running = False
 
     def is_running(self) -> bool:
@@ -37,7 +36,7 @@ class Server:
     # -------------------------
     # Wiring
     # -------------------------
-    def _bind_events(self):
+    def _bind_events(self) -> None:
         self.comm.set_heartbeat_callback(self.event_queue.publish)
         self.comm.set_task_status_callback(self.event_queue.publish)
         self.comm.set_aisle_request_callback(self.event_queue.publish)
@@ -48,7 +47,7 @@ class Server:
     def add_event_listener(self, callback: Callable[[Event], None]) -> None:
         self._event_listeners.append(callback)
     
-    def _process_events(self):
+    def _process_events(self) -> None:
         for event in self.event_queue.poll_all():
             self.robot_tracker.handle_event(event)
             self.task_store.handle_event(event)
@@ -57,7 +56,7 @@ class Server:
             for callback in self._event_listeners:
                 callback(event)
 
-    def _handle_event(self, event):
+    def _handle_event(self, event: Event) -> None:
         if isinstance(event, HeartbeatEvent):
             self._on_heartbeat(event)
 
@@ -70,13 +69,13 @@ class Server:
     # -------------------------
     # LOGIC
     # -------------------------
-    def _on_heartbeat(self, event: HeartbeatEvent):
+    def _on_heartbeat(self, event: HeartbeatEvent) -> None:
         print(f"[{event.robot_id}] pose={event.pose}")
 
-    def _on_task_status(self, event: TaskStatusEvent):
+    def _on_task_status(self, event: TaskStatusEvent) -> None:
         print(f"[{event.robot_id}] task={event.task_id} -> {event.status}")
 
-    def _on_aisle_request(self, event: AisleRequestEvent):
+    def _on_aisle_request(self, event: AisleRequestEvent) -> None:
         print(f"[{event.robot_id}] requests aisle {event.aisle_id}")
 
         # placeholder decision (now just accepting every request)
@@ -89,7 +88,7 @@ class Server:
     # -------------------------
     # Main loop
     # -------------------------
-    def update(self, dt: float):
+    def update(self, dt: float) -> None:
         self._process_events()
         self.robot_tracker.update()
         self.task_dispatcher.try_dispatch()
