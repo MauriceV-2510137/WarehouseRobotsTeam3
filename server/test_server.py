@@ -42,7 +42,7 @@ client.subscribe("aisle/+/request")
 time.sleep(5)
 
 # Send task
-print("SERVER SENDING: t1, segment: [6.5, -4.0], base: [0.0, 0.0]")
+print("SERVER SENDING: t1, segment: [6.5, -4.0], base: [0.0, 1.0]")
 client.publish(
     "robot/robot_1/task/assign",
     json.dumps({
@@ -50,13 +50,13 @@ client.publish(
         "aisle_id": "a1",
         "aisle_pos": [3, -4],
         "segment_pos": [6.5, -4],
-        "base_pos": [0.0, 0.0]
+        "base_pos": [0.0, 1.0]
     })
 )
 
 time.sleep(5)
 
-print("SERVER SENDING: t2, segment: [4.5, 0.0], base: [0.0, 0.0]")
+print("SERVER SENDING: t2, segment: [4.5, 0.0], base: [0.0, -1.0]")
 client.publish(
     "robot/robot_5/task/assign",
     json.dumps({
@@ -64,7 +64,21 @@ client.publish(
         "aisle_id": "a1",
         "aisle_pos": [3, 0],
         "segment_pos": [4.5, 0],
-        "base_pos": [0.0, 0.0]
+        "base_pos": [0.0, -1.0]
+    })
+)
+
+time.sleep(5)
+
+print("SERVER SENDING: t3, segment: [6.5, 4.0], base: [0.0, -0.5]  (top corridor mirror of robot_1)")
+client.publish(
+    "robot/robot_4/task/assign",
+    json.dumps({
+        "task_id": "t3",
+        "aisle_id": "a2",
+        "aisle_pos": [3, 4],
+        "segment_pos": [6.5, 4],
+        "base_pos": [0.0, -0.5]
     })
 )
 
