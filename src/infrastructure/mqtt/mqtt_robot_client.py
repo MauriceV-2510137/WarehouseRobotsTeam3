@@ -14,7 +14,6 @@ class MqttRobotClient(IRobotComm):
         self.robot_id = robot_id
         self.broker_host = broker_host
 
-        self._connected = False
         self._running = False
 
         self._on_task_received: TaskCallback | None = None
@@ -36,7 +35,6 @@ class MqttRobotClient(IRobotComm):
             self.client.connect_async(self.broker_host)
             self.client.loop_start()
         except Exception as e:
-            self._connected = False
             print(f"[MQTT] Initial connection error: {e}")
         
     def disconnect(self) -> None:
@@ -49,27 +47,24 @@ class MqttRobotClient(IRobotComm):
             print(f"[MQTT] Disconnect error: {e}")
 
     def is_connected(self) -> bool:
-        return self._connected
+        return self.client.is_connected()
 
     # -------------------------
     # MQTT callbacks
     # -------------------------
     def _on_connect(self, client, userdata, flags, reason_code, properties) -> None:
         if reason_code == 0:
-            self._connected = True
             self._subscribe()
             print("[MQTT] Connected successfully")
         else:
-            self._connected = False
             print(f"[MQTT] Connection failed (rc={reason_code})")
 
     def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties) -> None:
-        self._connected = False
         print("[MQTT] Disconnected")
 
     def _subscribe(self) -> None:
-        self.client.subscribe(f"robot/{self.robot_id}/task/assign")
-        self.client.subscribe(f"robot/{self.robot_id}/aisle/response")
+        self.client.subscribe(f"robot/{self.robot_id}/task/assign", qos=1)
+        self.client.subscribe(f"robot/{self.robot_id}/aisle/response", qos=1)
 
     # -------------------------
     # Publish API
@@ -82,44 +77,35 @@ class MqttRobotClient(IRobotComm):
                 "pose": [pose.x, pose.y, pose.theta]
             }),
             qos=1,
-            retain=False
         )
 
     def publish_task_status(self, task_id: str, status: TaskStatus, reason: str | None = None) -> None:
-        payload = {
-            "task_id": task_id,
-            "status": status.name,
-            "reason": reason
-        }
-
         self.client.publish(
             f"robot/{self.robot_id}/task/status",
-            json.dumps(payload),
+            json.dumps({
+                "task_id": task_id,
+                "status": status.name,
+                "reason": reason
+            }),
             qos=1
         )
 
     def request_aisle(self, robot_id: str, aisle_id: str, task_id: str) -> None:
-        payload = {
-            "robot_id": robot_id,
-            "aisle_id": aisle_id,
-            "task_id": task_id
-        }
-
         self.client.publish(
             f"aisle/{aisle_id}/request",
-            json.dumps(payload),
+            json.dumps({
+                "robot_id": robot_id,
+                "task_id": task_id
+            }),
             qos=1
         )
 
     def release_aisle(self, robot_id: str, aisle_id: str) -> None:
-        payload = {
-            "robot_id": robot_id,
-            "aisle_id": aisle_id
-        }
-
         self.client.publish(
             f"aisle/{aisle_id}/release",
-            json.dumps(payload),
+            json.dumps({
+                "robot_id": robot_id
+            }),
             qos=1
         )
 

@@ -11,8 +11,7 @@ class Navigator:
         self.target: tuple[float, float] | None = None
         self._reached_target = False
 
-        self.position_tolerance = 0.09   # metres -- arrived if closer than this
-        self.angle_tolerance    = 0.07   # radians (unused in compute, kept for reference)
+        self.position_tolerance = 0.02   # metres
 
         self.k_linear  = model.default_linear_gain
         self.k_angular = model.default_angular_gain

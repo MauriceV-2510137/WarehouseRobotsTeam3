@@ -1,11 +1,10 @@
 import json
 import paho.mqtt.client as mqtt
 
-from server.interfaces.server_comm import IServerComm, HeartbeatCallback, TaskStatusCallback, AisleRequestCallback
-from server.core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent
-from core.task import TaskStatus
+from server.interfaces.server_comm import IServerComm, HeartbeatCallback, TaskStatusCallback, AisleRequestCallback, AisleReleaseCallback
+from server.core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent, AisleReleaseEvent
+from core.task import Task, TaskStatus
 from core.pose import Pose
-from core.task import Task
 
 class MqttServerClient(IServerComm):
 
@@ -14,12 +13,12 @@ class MqttServerClient(IServerComm):
 
         self.broker_host = broker_host
 
-        self._connected = False
         self._running = True
 
         self._on_heartbeat: HeartbeatCallback | None = None
-        self._on_aisle_request: AisleRequestCallback | None = None
         self._on_task_status: TaskStatusCallback | None = None
+        self._on_aisle_request: AisleRequestCallback | None = None
+        self._on_aisle_release: AisleReleaseCallback | None = None
 
         self.client.on_connect = self._on_connect
         self.client.on_disconnect = self._on_disconnect
@@ -37,7 +36,6 @@ class MqttServerClient(IServerComm):
             self.client.connect_async(self.broker_host)
             self.client.loop_start()
         except Exception as e:
-            self._connected = False
             print(f"[MQTT] Initial connection error: {e}")
 
     def disconnect(self) -> None:
@@ -50,31 +48,29 @@ class MqttServerClient(IServerComm):
             print(f"[MQTT] Disconnect error: {e}")
 
     def is_connected(self) -> bool:
-        return self._connected
+        return self.client.is_connected()
 
     # -------------------------
     # MQTT callbacks
     # -------------------------
     def _on_connect(self, client, userdata, flags, reason_code, properties) -> None:
         if reason_code == 0:
-            self._connected = True
             self._subscribe()
             print("[MQTT] Connected successfully")
         else:
-            self._connected = False
             print(f"[MQTT] Connection failed (rc={reason_code})")
 
     def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties) -> None:
-        self._connected = False
         print("[MQTT] Disconnected")
 
     def _subscribe(self) -> None:
-        self.client.subscribe("robot/+/heartbeat")
-        self.client.subscribe("robot/+/task/status")
-        self.client.subscribe("aisle/+/request")
+        self.client.subscribe("robot/+/heartbeat", qos=1)
+        self.client.subscribe("robot/+/task/status", qos=1)
+        self.client.subscribe("aisle/+/request", qos=1)
+        self.client.subscribe("aisle/+/release", qos=1)
 
     # -------------------------
-    # Incoming messages -> callbacks
+    # Incoming messages
     # -------------------------
     def _on_message(self, client, userdata, msg) -> None:
         topic = msg.topic
@@ -96,9 +92,14 @@ class MqttServerClient(IServerComm):
                 self._on_task_status(event)
 
         elif topic.startswith("aisle/") and topic.endswith("/request"):
-            event = self._parse_aisle_request(payload)
+            event = self._parse_aisle_request(topic, payload)
             if self._on_aisle_request:
                 self._on_aisle_request(event)
+
+        elif topic.startswith("aisle/") and topic.endswith("/release"):
+            event = self._parse_aisle_release(topic, payload)
+            if self._on_aisle_release:
+                self._on_aisle_release(event)
 
     # -------------------------
     # Outgoing
@@ -112,7 +113,8 @@ class MqttServerClient(IServerComm):
                 "aisle_pos": task.aisle_pos,
                 "segment_pos": task.segment_pos,
                 "base_pos": task.base_pos,
-            })
+            }),
+            qos=1
         )
 
     def respond_aisle(self, robot_id: str, aisle_id: str, granted: bool) -> None:
@@ -121,7 +123,8 @@ class MqttServerClient(IServerComm):
             json.dumps({
                 "aisle_id": aisle_id,
                 "granted": granted
-            })
+            }),
+            qos=1
         )
 
     # -------------------------
@@ -130,17 +133,29 @@ class MqttServerClient(IServerComm):
     def set_heartbeat_callback(self, cb: HeartbeatCallback) -> None:
         self._on_heartbeat = cb
 
+    def set_task_status_callback(self, cb: TaskStatusCallback) -> None:
+        self._on_task_status = cb
+
     def set_aisle_request_callback(self, cb: AisleRequestCallback) -> None:
         self._on_aisle_request = cb
 
-    def set_task_status_callback(self, cb: TaskStatusCallback) -> None:
-        self._on_task_status = cb
+    def set_aisle_release_callback(self, cb: AisleReleaseCallback) -> None:
+        self._on_aisle_release = cb
+
+    # -------------------------
+    # Parsing helpers
+    # -------------------------
+    def _extract_id(self, topic: str, index: int) -> str:
+        parts = topic.split("/")
+        if len(parts) <= index:
+            raise ValueError(f"Invalid topic: {topic}")
+        return parts[index]
 
     # -------------------------
     # Parsing
     # -------------------------
     def _parse_heartbeat(self, topic, payload) -> HeartbeatEvent:
-        robot_id = topic.split("/")[1]
+        robot_id = self._extract_id(topic, 1)
 
         pose = Pose(*payload["pose"])
 
@@ -151,7 +166,7 @@ class MqttServerClient(IServerComm):
         )
 
     def _parse_task_status(self, topic, payload) -> TaskStatusEvent:
-        robot_id = topic.split("/")[1]
+        robot_id = self._extract_id(topic, 1)
 
         return TaskStatusEvent(
             robot_id=robot_id,
@@ -160,9 +175,19 @@ class MqttServerClient(IServerComm):
             reason=payload.get("reason")
         )
 
-    def _parse_aisle_request(self, payload) -> AisleRequestEvent:
+    def _parse_aisle_request(self, topic, payload) -> AisleRequestEvent:
+        aisle_id = self._extract_id(topic, 1)
+
         return AisleRequestEvent(
             robot_id=payload["robot_id"],
-            aisle_id=payload["aisle_id"],
+            aisle_id=aisle_id,
             task_id=payload["task_id"]
+        )
+
+    def _parse_aisle_release(self, topic, payload) -> AisleReleaseEvent:
+        aisle_id = self._extract_id(topic, 1)
+
+        return AisleReleaseEvent(
+            robot_id=payload["robot_id"],
+            aisle_id=aisle_id
         )

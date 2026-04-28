@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 from typing import Callable
 
 from core.task import Task
-from server.core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent
+from server.core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent, AisleReleaseEvent
 
 HeartbeatCallback = Callable[[HeartbeatEvent], None]
 TaskStatusCallback = Callable[[TaskStatusEvent], None]
 AisleRequestCallback = Callable[[AisleRequestEvent], None]
+AisleReleaseCallback = Callable[[AisleReleaseEvent], None]
 
 class IServerComm(ABC):
 
@@ -36,9 +37,13 @@ class IServerComm(ABC):
         pass
 
     @abstractmethod
+    def set_task_status_callback(self, cb: TaskStatusCallback) -> None:
+        pass
+
+    @abstractmethod
     def set_aisle_request_callback(self, cb: AisleRequestCallback) -> None:
         pass
 
     @abstractmethod
-    def set_task_status_callback(self, cb: TaskStatusCallback) -> None:
+    def set_aisle_release_callback(self, cb: AisleReleaseCallback) -> None:
         pass

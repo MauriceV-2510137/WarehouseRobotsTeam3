@@ -24,3 +24,8 @@ class AisleRequestEvent(Event):
     robot_id: str
     aisle_id: str
     task_id: str
+
+@dataclass
+class AisleReleaseEvent(Event):
+    robot_id: str
+    aisle_id: str
