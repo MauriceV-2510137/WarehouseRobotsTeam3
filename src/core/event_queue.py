@@ -1,3 +1,4 @@
+import queue
 from queue import Queue
 from core.events import Event
 
@@ -10,6 +11,9 @@ class EventQueue:
 
     def poll_all(self):
         events = []
-        while not self._queue.empty():
-            events.append(self._queue.get())
+        try:
+            while True:
+                events.append(self._queue.get_nowait())
+        except queue.Empty:
+            pass
         return events

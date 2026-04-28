@@ -6,7 +6,6 @@ from core.task import TaskStatus, TaskAlreadyAssignedError
 class IdleState(IRobotState):
 
     def on_enter(self, robot) -> None:
-        print("Robot entered Idle state")
         robot.motion.stop()
 
     def update(self, robot, dt: float) -> TransitionID:

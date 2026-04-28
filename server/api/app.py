@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from server.api.routes import robots
+from server.api.routes import robots, tasks
 from server.core.server import Server
 
 def create_app(server: Server) -> FastAPI:
@@ -16,5 +16,6 @@ def create_app(server: Server) -> FastAPI:
     )
 
     app.include_router(robots.router, prefix="/api")
+    app.include_router(tasks.router, prefix="/api")
 
     return app

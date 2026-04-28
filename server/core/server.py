@@ -6,6 +6,8 @@ from server.core.event_queue import EventQueue
 from server.core.events import Event, HeartbeatEvent, TaskStatusEvent, AisleRequestEvent
 from server.core.registry import RobotRegistry, RobotTracker
 from server.core.warehouse import WarehouseMap
+from server.core.task_dispatcher import TaskDispatcher
+from server.core.task_store import TaskStore
 
 class Server:
 
@@ -15,6 +17,9 @@ class Server:
 
         self.robot_registry = RobotRegistry()
         self.robot_tracker = RobotTracker(self.robot_registry)
+
+        self.task_store = TaskStore()
+        self.task_dispatcher = TaskDispatcher(self.robot_registry, self.task_store, self.comm, WarehouseMap())
         
         self.event_queue = EventQueue()
         self._event_listeners: List[Callable[[Event], None]] = []
@@ -40,13 +45,13 @@ class Server:
     # -------------------------
     # Events
     # -------------------------
-
     def add_event_listener(self, callback: Callable[[Event], None]) -> None:
-            self._event_listeners.append(callback)
+        self._event_listeners.append(callback)
     
     def _process_events(self):
         for event in self.event_queue.poll_all():
             self.robot_tracker.handle_event(event)
+            self.task_store.handle_event(event)
             self._handle_event(event)
 
             for callback in self._event_listeners:
@@ -54,7 +59,7 @@ class Server:
 
     def _handle_event(self, event):
         if isinstance(event, HeartbeatEvent):
-                self._on_heartbeat(event)
+            self._on_heartbeat(event)
 
         elif isinstance(event, TaskStatusEvent):
             self._on_task_status(event)
@@ -65,11 +70,6 @@ class Server:
     # -------------------------
     # LOGIC
     # -------------------------
-
-    def update(self, dt: float):
-        self._process_events()
-        self.robot_tracker.update()
-
     def _on_heartbeat(self, event: HeartbeatEvent):
         print(f"[{event.robot_id}] pose={event.pose}")
 
@@ -85,3 +85,11 @@ class Server:
             aisle_id=event.aisle_id,
             granted=True
         )
+
+    # -------------------------
+    # Main loop
+    # -------------------------
+    def update(self, dt: float):
+        self._process_events()
+        self.robot_tracker.update()
+        self.task_dispatcher.try_dispatch()

@@ -2,7 +2,8 @@ import json
 import paho.mqtt.client as mqtt
 
 from server.interfaces.server_comm import IServerComm
-from server.core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent, TaskStatus
+from server.core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent
+from core.task import TaskStatus
 from core.pose import Pose
 from core.task import Task
 

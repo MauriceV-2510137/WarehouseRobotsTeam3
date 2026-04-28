@@ -43,7 +43,7 @@ class Robot:
         self.comm.set_aisle_response_callback(self.event_queue.publish)
 
     def _setup_scheduler(self): # Heartbeat / health check
-        heartbeat_task = ScheduledTask(interval_s=1.0, callback=self.telemetry.publish_heartbeat)
+        heartbeat_task = ScheduledTask(interval_s=0.5, callback=self.telemetry.publish_heartbeat)
         self.scheduler.add(heartbeat_task)
 
     # -------------------------
@@ -54,6 +54,14 @@ class Robot:
             self.state_machine.handle_event(event)
 
     # -------------------------
+    # Sensors / pose
+    # -------------------------
+    def _update_pose(self):
+        left_enc, right_enc = self.sensors.get_wheel_positions()
+        heading = self.sensors.get_yaw() 
+        self.pose = self.odometry.update(left_enc, right_enc, true_heading=heading)
+
+    # -------------------------
     # Main loop
     # -------------------------
     def update(self, dt: float):
@@ -61,11 +69,3 @@ class Robot:
         self._process_events()
         self.state_machine.update(dt)
         self.scheduler.update(dt)
-    
-    # -------------------------
-    # Sensors / pose
-    # -------------------------
-    def _update_pose(self):
-        left_enc, right_enc = self.sensors.get_wheel_positions()
-        heading = self.sensors.get_yaw() 
-        self.pose = self.odometry.update(left_enc, right_enc, true_heading=heading)

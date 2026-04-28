@@ -11,8 +11,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation -0.004880069516961535 -0.9989567091077632 0.04540570724146485 5.777866497204882
-  position -13.583132229999709 0.22305275435015082 9.237240972667685
+  orientation -0.0043049915522596575 -0.9987737436537196 0.049320138236514155 5.817821256930358
+  position -10.990040147518815 0.04056839578149882 7.054490265600311
 }
 Background {
   skyColor [
@@ -33,7 +33,7 @@ DEF FLOOR_VIS Solid {
         metalness 0
       }
       geometry Plane {
-        size 8 9
+        size 8 8.5
       }
     }
   ]
@@ -56,7 +56,7 @@ DEF SEG1 Solid {
         metalness 0
       }
       geometry DEF SEG_SHAPE Plane {
-        size 1 9
+        size 1 8.5
       }
     }
   ]
@@ -71,9 +71,7 @@ DEF SEG2 Solid {
         roughness 0.9
         metalness 0
       }
-      geometry DEF SEG_SHAPE Plane {
-        size 1 9
-      }
+      geometry USE SEG_SHAPE
     }
   ]
   name "floor(2)"
@@ -87,9 +85,7 @@ DEF SEG3 Solid {
         roughness 0.9
         metalness 0
       }
-      geometry DEF SEG_SHAPE Plane {
-        size 1 9
-      }
+      geometry USE SEG_SHAPE
     }
   ]
   name "floor(3)"
@@ -102,7 +98,7 @@ DEF WALL Solid {
         baseColor 0.3 0.3 0.35
       }
       geometry DEF WALL_FRONT_BACK_SHAPE Box {
-        size 0.1 9 1
+        size 0.1 8.5 1
       }
     }
   ]

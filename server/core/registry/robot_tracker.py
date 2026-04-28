@@ -42,7 +42,7 @@ class RobotTracker:
         record.active_task_id = event.task_id
 
         # Go back online
-        if record.status == RobotServerStatus.OFFLINE or record.active_task_id is None:
+        if record.status in (RobotServerStatus.OFFLINE, RobotServerStatus.ONLINE) or event.task_id is None:
             record.status = RobotServerStatus.IDLE if not event.task_id else RobotServerStatus.BUSY
 
     def _on_task_status(self, event: TaskStatusEvent) -> None:
