@@ -2,7 +2,9 @@ import math
 import uuid
 from collections import deque
 
-from core.task import Task
+from server.core.time_utils import get_now
+
+from core.task import Task, TaskStatus
 from server.core.registry.robot_record import RobotRecord
 from server.core.registry.robot_registry import RobotRegistry
 from server.core.registry.robot_server_status import RobotServerStatus
@@ -28,6 +30,20 @@ class TaskDispatcher:
         self._queue.append(record)
         return record
 
+    def cancel(self, task_id: str) -> None:
+        record = self._task_store.get(task_id)
+        if record is None:
+            raise ValueError(f"Task '{task_id}' not found")
+
+        # atomic intent: only cancel if still in queue
+        if record not in self._queue:
+            raise ValueError(f"Task '{task_id}' already dispatched")
+
+        self._queue.remove(record)
+
+        record.status = TaskStatus.REJECTED
+        record.updated_at = get_now()
+
     def try_dispatch(self) -> None:
         if not self._queue:
             return
@@ -49,6 +65,9 @@ class TaskDispatcher:
         )
 
         record.robot_id = robot.robot_id
+        record.status = TaskStatus.IN_PROGRESS
+        record.updated_at = get_now()
+        
         robot.status = RobotServerStatus.BUSY  # optimistic update; corrected by tracker on next heartbeat
 
         self._comm.assign_task(robot.robot_id, task)

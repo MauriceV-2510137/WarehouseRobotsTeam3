@@ -20,10 +20,10 @@ class Robot:
         self.sensors = sensors
         self.comm = comm
 
-        self.pose = initial_pose or Pose()
+        self.initial_pose: Pose = Pose(initial_pose.x, initial_pose.y, initial_pose.theta) or Pose()
+        self.pose: Pose = Pose(initial_pose.x, initial_pose.y, initial_pose.theta) or Pose()
         self.odometry = OdometryEstimator(model)
-        self.initial_pose: Pose = initial_pose or Pose()
-        self.odometry.reset(initial_pose)
+        self.odometry.reset(self.pose)
         self.navigator = Navigator(model)
 
         self.task_manager = TaskManager()

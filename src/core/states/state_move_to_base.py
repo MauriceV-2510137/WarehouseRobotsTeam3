@@ -9,7 +9,10 @@ class MovingToBaseState(IRobotState):
         task = robot.task_manager.get_task()
         if not task:
             return
-
+        
+        # Release Aisle lock
+        robot.comm.release_aisle(robot.comm.robot_id, task.aisle_id)
+        # Set Base Target
         robot.navigator.set_target(robot.initial_pose.x, robot.initial_pose.y)
 
     def on_exit(self, robot) -> None:

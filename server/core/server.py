@@ -14,17 +14,29 @@ class Server:
     def __init__(self, comm: IServerComm) -> None:
         self.comm = comm
 
+        self._running = True
+
         self.robot_registry = RobotRegistry()
         self.robot_tracker = RobotTracker(self.robot_registry)
 
         self.task_store = TaskStore()
-        self.task_dispatcher = TaskDispatcher(self.robot_registry, self.task_store, self.comm, WarehouseMap())
+        self.warehouse_map = WarehouseMap()
+        self.task_dispatcher = TaskDispatcher(self.robot_registry, self.task_store, self.comm, self.warehouse_map)
 
         self.aisle_manager = AisleManager(self.comm)
         
         self.event_queue = EventQueue()
         self._event_listeners: list[Callable[[Event], None]] = []
         self._bind_events()
+    
+    # -------------------------
+    # Lifecycle
+    # -------------------------
+    def stop(self) -> None:
+        self._running = False
+
+    def is_running(self) -> bool:
+        return self._running
 
     # -------------------------
     # Wiring
@@ -71,7 +83,7 @@ class Server:
         print(f"[{event.robot_id}] task = {event.task_id} -> {event.status}")
 
     def _on_aisle_request(self, event: AisleRequestEvent) -> None:
-        print(f"[{event.robot_id}] aisle requestd = {event.aisle_id}")
+        print(f"[{event.robot_id}] aisle requested = {event.aisle_id}")
 
     def _on_aisle_release(self, event: AisleReleaseEvent) -> None:
         print(f"[{event.robot_id}] aisle released = {event.aisle_id}")

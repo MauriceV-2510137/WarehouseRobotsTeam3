@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+
+from server.core.time_utils import get_now
 
 from server.core.events import AisleReleaseEvent, AisleRequestEvent, Event
 from server.interfaces.server_comm import IServerComm
@@ -27,8 +29,7 @@ class AisleManager:
             self._handle_release(event)
 
     def update(self) -> None:
-        """Expire stale leases."""
-        now = datetime.now(timezone.utc)
+        now = get_now()
 
         for aisle_id in list(self._leases.keys()):
             lease = self._leases[aisle_id]
@@ -53,7 +54,7 @@ class AisleManager:
         return lease is None or lease.robot_id == robot_id
 
     def _acquire(self, event: AisleRequestEvent) -> None:
-        now = datetime.now(timezone.utc)
+        now = get_now()
 
         self._leases[event.aisle_id] = _AisleLease(
             robot_id=event.robot_id,
@@ -82,7 +83,7 @@ class AisleManager:
     # ------------------------------------------------------------
     def _expire_if_needed(self, aisle_id: str) -> None:
         lease = self._leases.get(aisle_id)
-        if lease and lease.expires_at <= datetime.now(timezone.utc):
+        if lease and lease.expires_at <= get_now():
             self._expire(aisle_id, lease)
 
     def _expire(self, aisle_id: str, lease: _AisleLease) -> None:
@@ -100,10 +101,10 @@ class AisleManager:
     # ------------------------------------------------------------
     def is_locked(self, aisle_id: str) -> bool:
         lease = self._leases.get(aisle_id)
-        return lease is not None and lease.expires_at > datetime.now(timezone.utc)
+        return lease is not None and lease.expires_at > get_now()
 
     def get_owner(self, aisle_id: str) -> str | None:
         lease = self._leases.get(aisle_id)
-        if not lease or lease.expires_at <= datetime.now(timezone.utc):
+        if not lease or lease.expires_at <= get_now():
             return None
         return lease.robot_id

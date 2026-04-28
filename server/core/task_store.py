@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from server.core.time_utils import get_now
+
 from core.task import TaskStatus
 from server.core.events import Event, TaskStatusEvent
 
@@ -11,8 +13,8 @@ class TaskRecord:
     shelf: int
     status: TaskStatus = field(default=TaskStatus.PENDING)
     robot_id: str | None = None
-    created_at: datetime = field(default_factory=datetime.now)
-    updated_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=get_now)
+    updated_at: datetime = field(default_factory=get_now)
 
 class TaskStore:
     def __init__(self) -> None:
@@ -33,4 +35,4 @@ class TaskStore:
         record = self._tasks.get(event.task_id)
         if record:
             record.status = event.status
-            record.updated_at = datetime.now()
+            record.updated_at = get_now()

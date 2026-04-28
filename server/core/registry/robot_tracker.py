@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+
+from server.core.time_utils import get_now
 
 from server.core.registry.robot_record import RobotRecord
 from server.core.registry.robot_registry import RobotRegistry
@@ -23,7 +25,7 @@ class RobotTracker:
             self._on_task_status(event)
 
     def update(self) -> None:
-        cutoff = datetime.now() - timedelta(seconds=OFFLINE_CUTOFF_S)
+        cutoff = get_now() - timedelta(seconds=OFFLINE_CUTOFF_S)
 
         for record in self._registry.get_all():
             if record.status != RobotServerStatus.OFFLINE and record.last_heartbeat < cutoff:
@@ -36,7 +38,7 @@ class RobotTracker:
     def _on_heartbeat(self, event: HeartbeatEvent) -> None:
         record = self._get_or_register(event.robot_id)
         record.pose = event.pose
-        record.last_heartbeat = datetime.now()
+        record.last_heartbeat = get_now()
         record.active_task_id = event.task_id
 
         # Go back online

@@ -47,7 +47,7 @@ async def run() -> None:
 
     async def server_loop() -> None:
         try:
-            while server._running:
+            while server.is_running():
                 server.update(_UPDATE_INTERVAL)
                 await asyncio.sleep(_UPDATE_INTERVAL)
         finally:
