@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from core.registry.robot_record import RobotRecord
-from core.registry.robot_registry import RobotRegistry
-from core.registry.robot_server_status import RobotServerStatus
-from core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent, Event
+from server.core.registry.robot_record import RobotRecord
+from server.core.registry.robot_registry import RobotRegistry
+from server.core.registry.robot_server_status import RobotServerStatus
+from server.core.events import HeartbeatEvent, TaskStatusEvent, AisleRequestEvent, Event
 from core.task import TaskStatus
 
 OFFLINE_CUTOFF_S = 4.0 # x seconds without any hearthbeat -> robot set offline

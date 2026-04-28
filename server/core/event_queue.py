@@ -1,5 +1,5 @@
 from queue import Queue
-from core.events import Event
+from server.core.events import Event
 
 class EventQueue:
     def __init__(self):
