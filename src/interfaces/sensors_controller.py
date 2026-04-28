@@ -11,6 +11,14 @@ class ISensorsController(ABC):
         pass
 
     @abstractmethod
+    def get_front_wide_distance(self) -> float:
+        pass
+
+    @abstractmethod
+    def get_min_distance(self) -> float:
+        pass
+
+    @abstractmethod
     def get_left_distance(self) -> float:
         pass
 

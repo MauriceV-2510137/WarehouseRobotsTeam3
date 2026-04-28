@@ -12,6 +12,7 @@ class MovingToAisleEntryState(IRobotState):
 
         print(f"Moving to aisle: {task.aisle_pos}")
 
+        robot.reset_collision_state()
         robot.task_manager.start_task()
         robot.comm.publish_task_status(task.id, TaskStatus.IN_PROGRESS)
         robot.navigator.set_target(*task.aisle_pos)
@@ -21,7 +22,7 @@ class MovingToAisleEntryState(IRobotState):
 
     def update(self, robot, dt: float) -> TransitionID:
         linear, angular = robot.navigator.compute(robot.pose)
-        robot.motion.move(linear, angular)
+        robot.safe_move(linear, angular, dt)
 
         if robot.navigator.reached_target():
             robot.navigator.clear_reached()

@@ -57,6 +57,21 @@ class WebotsSensorsController(ISensorsController):
         half = max(1, n // 24)       # half of 30-deg sector = 15 deg
         return self._sector_min(scan, center=0, half=half)
 
+    def get_front_wide_distance(self) -> float:
+        """
+        Minimum range in a 150-degree forward cone (+/-75 deg around +X).
+        Wide enough to catch robots crossing at an angle.
+        """
+        scan = self._clean(self.hardware.get_lidar_scan())
+        n    = len(scan)
+        half = max(1, 5 * n // 24)  # half of 150-deg sector = 75 deg
+        return self._sector_min(scan, center=0, half=half)
+
+    def get_min_distance(self) -> float:
+        """Minimum range across the full 360-degree scan.
+        Use as an omnidirectional emergency bubble check."""
+        return min(self._clean(self.hardware.get_lidar_scan()))
+
     def get_left_distance(self) -> float:
         """
         Minimum range in the left 30-degree cone (+/-15 deg around +Y).

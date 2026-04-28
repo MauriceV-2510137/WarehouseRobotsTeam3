@@ -10,6 +10,7 @@ class MovingToSegmentState(IRobotState):
         if not task:
             return
 
+        robot.reset_collision_state()
         print(f"Moving to shelf: {task.segment_pos}")
         robot.navigator.set_target(*task.segment_pos)
 
@@ -18,7 +19,7 @@ class MovingToSegmentState(IRobotState):
 
     def update(self, robot, dt: float) -> TransitionID:
         linear, angular = robot.navigator.compute(robot.pose)
-        robot.motion.move(linear, angular)
+        robot.safe_move(linear, angular, dt)
         
         if robot.navigator.reached_target():
             robot.navigator.clear_reached()

@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
+
 from controller import Robot as WebotsRobot
 from bootstrap.robot_factory import build_webot_robot
 
