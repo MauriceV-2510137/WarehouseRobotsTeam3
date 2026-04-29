@@ -10,7 +10,7 @@ async def websocket_endpoint(websocket: WebSocket, manager: WebSocketManager = D
     await manager.connect(websocket)
     try:
         while True:
-            await websocket.receive()
+            await websocket.receive_text()
     except WebSocketDisconnect:
         pass
     finally:

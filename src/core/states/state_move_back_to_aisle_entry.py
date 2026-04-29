@@ -16,6 +16,11 @@ class MovingBackToAisleEntryState(IRobotState):
         robot.motion.stop()
 
     def update(self, robot, dt: float) -> TransitionID:
+
+        if not robot.aisle_lock_granted:
+            robot.motion.stop()
+            return TransitionID.NO_TRANSITION
+
         linear, angular = robot.navigator.compute(robot.pose)
         robot.motion.move(linear, angular)
 

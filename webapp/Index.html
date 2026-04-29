@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WarehouseOS — Robot Control Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080b14;--surface:#0f1220;--surface2:#161b2e;--surface3:#1d2438;
+  --border:#242d47;--border2:#2e3a5c;
+  --accent:#f97316;--accent-dim:rgba(249,115,22,.13);--accent-glow:rgba(249,115,22,.08);
+  --green:#22c55e;--green-dim:rgba(34,197,94,.12);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.12);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,.12);
+  --yellow:#eab308;--yellow-dim:rgba(234,179,8,.12);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,.12);
+  --text:#dde4f0;--text-muted:#8896b3;--text-dim:#3d4d6e;
+  --mono:'Share Tech Mono',monospace;--body:'Exo 2',sans-serif;--display:'Orbitron',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;overflow:hidden}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ──── LAYOUT ──── */
+#app{display:grid;grid-template-rows:52px 1fr;height:100vh}
+#main{display:grid;grid-template-columns:310px 1fr 310px;overflow:hidden}
+
+/* ──── HEADER ──── */
+#header{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;gap:14px;
+  position:relative;
+}
+#header::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:.3;
+}
+#logo{font-family:var(--display);font-size:17px;font-weight:900;color:var(--accent);
+  letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+#logo span{color:var(--text-muted);font-weight:400;letter-spacing:.05em}
+.sep{width:1px;height:26px;background:var(--border2);flex-shrink:0}
+
+#server-url{
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  font-family:var(--mono);font-size:12px;padding:5px 9px;border-radius:4px;
+  width:200px;outline:none;transition:border-color .15s;
+}
+#server-url:focus{border-color:var(--accent)}
+
+#connect-btn{
+  background:transparent;border:1px solid var(--border2);color:var(--text-muted);
+  font-family:var(--display);font-size:9px;letter-spacing:.1em;padding:5px 10px;
+  border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+#connect-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+
+.ws-badge{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--text-muted)}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);transition:all .3s;flex-shrink:0}
+.ws-dot.connected{background:var(--green);box-shadow:0 0 8px var(--green)}
+.ws-dot.connecting{background:var(--yellow);animation:pulse-dot 1s infinite}
+.ws-dot.error{background:var(--red)}
+
+.hstats{margin-left:auto;display:flex;gap:20px}
+.hstat{display:flex;flex-direction:column;align-items:center;gap:1px}
+.hstat-label{font-size:8px;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;font-family:var(--display)}
+.hstat-val{font-family:var(--mono);font-size:16px;color:var(--text);line-height:1;font-weight:500}
+.hstat-val.accent{color:var(--accent)}
+
+/* ──── PANEL BASE ──── */
+.panel{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel:last-child{border-right:none;border-left:1px solid var(--border)}
+
+.ph{
+  padding:9px 14px;border-bottom:1px solid var(--border);
+  font-family:var(--display);font-size:9px;font-weight:600;letter-spacing:.18em;
+  color:var(--accent);text-transform:uppercase;display:flex;align-items:center;gap:8px;
+  flex-shrink:0;background:var(--surface);
+}
+.ph-badge{
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text-muted);font-family:var(--mono);font-size:10px;
+  padding:1px 6px;border-radius:3px;margin-left:auto;
+}
+.panel-body{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+
+/* ──── LEFT PANEL: Tasks ──── */
+#task-form{
+  padding:12px;border-bottom:1px solid var(--border);flex-shrink:0;
+  background:var(--surface);
+}
+.form-row{display:flex;gap:8px;margin-bottom:8px}
+.form-group{flex:1;display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:9px;letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase;font-family:var(--display)}
+select{
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  font-family:var(--body);font-size:13px;padding:6px 8px;border-radius:4px;
+  outline:none;transition:border-color .15s;cursor:pointer;
+}
+select:focus{border-color:var(--accent)}
+
+#submit-btn{
+  width:100%;background:var(--accent);color:#fff;border:none;
+  font-family:var(--display);font-size:10px;font-weight:600;letter-spacing:.12em;
+  padding:9px;border-radius:4px;cursor:pointer;text-transform:uppercase;
+  transition:all .15s;
+}
+#submit-btn:hover{background:#e8620a;box-shadow:0 0 16px rgba(249,115,22,.3)}
+#submit-btn:active{transform:scale(.98)}
+#submit-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+
+.task-item{
+  padding:10px 12px;border-bottom:1px solid var(--border);
+  transition:background .1s;cursor:default;
+}
+.task-item:hover{background:var(--surface2)}
+.task-header{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.task-id{font-family:var(--mono);font-size:10px;color:var(--text-dim);flex:1;letter-spacing:.04em}
+.task-info-row{display:flex;align-items:center;gap:8px}
+.task-loc{font-family:var(--mono);font-size:13px;color:var(--text);font-weight:500}
+.task-robot{font-size:11px;color:var(--text-muted)}
+.task-time{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:auto}
+
+.badge{
+  font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:2px;
+  text-transform:uppercase;letter-spacing:.07em;border:1px solid transparent;flex-shrink:0;
+}
+.badge.PENDING{background:var(--blue-dim);color:var(--blue);border-color:rgba(96,165,250,.25)}
+.badge.IN_PROGRESS{background:var(--yellow-dim);color:var(--yellow);border-color:rgba(234,179,8,.25)}
+.badge.DONE{background:var(--green-dim);color:var(--green);border-color:rgba(34,197,94,.25)}
+.badge.REJECTED{background:var(--red-dim);color:var(--red);border-color:rgba(239,68,68,.25)}
+
+.cancel-btn{
+  background:transparent;border:1px solid rgba(239,68,68,.3);color:var(--red);
+  font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:3px;cursor:pointer;
+  transition:all .12s;flex-shrink:0;
+}
+.cancel-btn:hover{background:var(--red-dim);border-color:rgba(239,68,68,.6)}
+
+.section-header {
+  padding: 6px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  font-family: var(--display);
+  font-size: 8px;
+  letter-spacing: .15em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-header:first-child { border-top: none; }
+.section-header .sh-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.section-header.sh-pending   { color: var(--blue); }
+.section-header.sh-progress  { color: var(--yellow); }
+.section-header.sh-completed { color: var(--green); }
+.section-header .sh-count {
+  margin-left: auto;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 0 5px;
+  border-radius: 2px;
+  color: var(--text-muted);
+}
+
+/* ──── CENTER MAP ──── */
+#center{display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+
+#map-wrap{padding:10px;flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+#map-header{display:flex;align-items:center;gap:8px;flex-shrink:0}
+#map-title{font-family:var(--display);font-size:8px;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase}
+#map-legend{display:flex;gap:12px;margin-left:auto}
+.legend-item{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-dim)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+
+#map-outer{
+  flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  overflow:hidden;position:relative;min-height:0;
+}
+#map-svg{width:100%;height:100%}
+
+/* ──── RIGHT PANEL: Robots ──── */
+#right-panel{display:flex;flex-direction:column;overflow:hidden}
+#robot-scroll{flex:1;overflow-y:auto;min-height:0}
+
+.rcard{padding:10px 12px;border-bottom:1px solid var(--border);transition:background .1s}
+.rcard:hover{background:var(--surface2)}
+.rcard-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:all .3s}
+.rname{font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:.06em;flex:1}
+.rstatus{font-family:var(--mono);font-size:10px}
+.rstatus.IDLE{color:var(--green)}.rstatus.BUSY{color:var(--yellow)}
+.rstatus.ONLINE{color:var(--blue)}.rstatus.OFFLINE{color:var(--text-dim)}
+
+.rdata{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.rdata-item{display:flex;flex-direction:column;gap:1px}
+.rdata-lbl{font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;font-family:var(--display)}
+.rdata-val{font-family:var(--mono);font-size:11px;color:var(--text)}
+.rtask-bar{
+  margin-top:6px;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:3px;padding:3px 8px;font-family:var(--mono);font-size:10px;color:var(--yellow);
+  display:flex;align-items:center;gap:6px;overflow:hidden;
+}
+.rtask-bar::before{content:'▸';font-size:9px;flex-shrink:0}
+.rtask-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ──── AISLES ──── */
+#aisles-section{border-top:1px solid var(--border);flex-shrink:0}
+.aisle-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:8px 12px}
+.aisle-cell{
+  background:var(--surface2);border:1px solid var(--border);border-radius:4px;
+  padding:7px 9px;transition:all .2s;
+}
+.aisle-cell.locked{border-color:rgba(234,179,8,.5);background:rgba(234,179,8,.07)}
+.aisle-name{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:2px}
+.aisle-st{font-family:var(--mono);font-size:12px;font-weight:500}
+.aisle-st.free{color:var(--green)}.aisle-st.locked{color:var(--yellow)}
+.aisle-owner{font-size:10px;color:var(--text-dim);font-family:var(--mono);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ──── MISC ──── */
+.empty{padding:28px 16px;text-align:center;color:var(--text-dim);font-size:12px;font-family:var(--mono)}
+
+/* ──── TOAST ──── */
+#toast{
+  position:fixed;bottom:18px;right:18px;
+  background:var(--surface2);border:1px solid var(--border2);border-radius:5px;
+  padding:8px 14px;font-family:var(--mono);font-size:12px;z-index:999;
+  opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none;
+}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.success{border-color:rgba(34,197,94,.5);color:var(--green)}
+#toast.error{border-color:rgba(239,68,68,.5);color:var(--red)}
+#toast.info{border-color:rgba(96,165,250,.5);color:var(--blue)}
+
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fade-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.fade-in{animation:fade-in .18s ease-out}
+@keyframes blink-busy{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="header">
+  <div id="logo">Warehouse<span>OS</span></div>
+  <div class="sep"></div>
+  <input id="server-url" type="text" value="http://localhost:8000" spellcheck="false">
+  <button id="connect-btn" onclick="reconnect()">↺ Reconnect</button>
+  <div class="ws-badge">
+    <div class="ws-dot" id="ws-dot"></div>
+    <span id="ws-lbl">OFFLINE</span>
+  </div>
+  <div class="sep"></div>
+  <div class="hstats">
+    <div class="hstat"><div class="hstat-label">Online</div><div class="hstat-val" id="st-online">0</div></div>
+    <div class="hstat"><div class="hstat-label">Busy</div><div class="hstat-val accent" id="st-busy">0</div></div>
+    <div class="hstat"><div class="hstat-label">Queue</div><div class="hstat-val" id="st-queue">0</div></div>
+    <div class="hstat"><div class="hstat-label">Done</div><div class="hstat-val" id="st-done">0</div></div>
+  </div>
+</div>
+
+<div id="main">
+
+  <div class="panel">
+    <div class="ph">Task Queue <span class="ph-badge" id="task-badge">0</span></div>
+
+    <div id="task-form">
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">Aisle</div>
+          <select id="f-aisle">
+            <option value="1">Aisle 1</option>
+            <option value="2">Aisle 2</option>
+            <option value="3" selected>Aisle 3</option>
+            <option value="4">Aisle 4</option>
+            <option value="5">Aisle 5</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Shelf</div>
+          <select id="f-shelf">
+            <option value="1">Shelf 1</option>
+            <option value="2" selected>Shelf 2</option>
+            <option value="3">Shelf 3</option>
+          </select>
+        </div>
+      </div>
+      <button id="submit-btn" onclick="submitTask()">+ Dispatch Task</button>
+    </div>
+
+    <div class="panel-body" id="task-list">
+        </div>
+  </div>
+
+  <div id="center">
+    <div id="map-wrap">
+      <div id="map-header">
+        <div id="map-title">Warehouse Floor — Live View</div>
+        <div id="map-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>IDLE</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>BUSY</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--text-dim)"></div>OFFLINE</div>
+        </div>
+      </div>
+      <div id="map-outer">
+        <svg id="map-svg" viewBox="0 0 620 380" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+          <rect width="620" height="380" fill="#080b14"/>
+
+          <rect x="42" y="140" width="36" height="100" rx="5" fill="rgba(249,115,22,.07)" stroke="#f97316" stroke-width=".8" stroke-dasharray="4 3"/>
+          <text x="60" y="130" text-anchor="middle" font-family="Share Tech Mono" font-size="9" fill="#f97316" opacity=".8">BASE</text>
+          
+          <g opacity=".7" stroke="#f97316" stroke-width="1.5" fill="none">
+            <circle cx="60" cy="154" r="4"/>
+            <circle cx="60" cy="172" r="4"/>
+            <circle cx="60" cy="190" r="4"/>
+            <circle cx="60" cy="208" r="4"/>
+            <circle cx="60" cy="226" r="4"/>
+          </g>
+
+          <rect id="ab-1" x="60" y="31" width="455" height="30" rx="2" fill="rgba(96,165,250,.04)" stroke="none"/>
+          <rect id="ab-2" x="60" y="103" width="455" height="30" rx="2" fill="rgba(96,165,250,.04)" stroke="none"/>
+          <rect id="ab-3" x="60" y="175" width="455" height="30" rx="2" fill="rgba(96,165,250,.04)" stroke="none"/>
+          <rect id="ab-4" x="60" y="247" width="455" height="30" rx="2" fill="rgba(96,165,250,.04)" stroke="none"/>
+          <rect id="ab-5" x="60" y="319" width="455" height="30" rx="2" fill="rgba(96,165,250,.04)" stroke="none"/>
+
+          <line x1="247.5" y1="0" x2="247.5" y2="370" stroke="rgba(96,165,250,.12)" stroke-width=".8" stroke-dasharray="5 4"/>
+          <text x="250" y="10" font-family="Share Tech Mono" font-size="7" fill="rgba(96,165,250,.3)">ENTRY X=3</text>
+
+          <g font-family="Share Tech Mono" font-size="9" fill="rgba(96,165,250,.5)">
+            <text x="50" y="50"  text-anchor="end">A1</text>
+            <text x="50" y="122" text-anchor="end">A2</text>
+            <text x="50" y="194" text-anchor="end">A3</text>
+            <text x="50" y="266" text-anchor="end">A4</text>
+            <text x="50" y="338" text-anchor="end">A5</text>
+          </g>
+
+          <g font-family="Share Tech Mono" font-size="8" fill="rgba(148,163,184,.35)" text-anchor="middle">
+            <text x="341" y="22">S1</text>
+            <text x="404" y="22">S2</text>
+            <text x="466" y="22">S3</text>
+          </g>
+
+          <g id="shelves">
+            <rect id="sh-1-1" x="326" y="35" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-1-2" x="389" y="35" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-1-3" x="451" y="35" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-2-1" x="326" y="107" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-2-2" x="389" y="107" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-2-3" x="451" y="107" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-3-1" x="326" y="179" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-3-2" x="389" y="179" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-3-3" x="451" y="179" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-4-1" x="326" y="251" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-4-2" x="389" y="251" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-4-3" x="451" y="251" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-5-1" x="326" y="323" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-5-2" x="389" y="323" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+            <rect id="sh-5-3" x="451" y="323" width="30" height="22" rx="3" fill="rgba(25,50,110,.7)" stroke="rgba(96,165,250,.35)" stroke-width=".7"/>
+          </g>
+
+          <g id="robots-layer"></g>
+
+          <text x="600" y="375" font-family="Share Tech Mono" font-size="7" fill="rgba(61,77,110,.8)" text-anchor="end">world coords (m)</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="right-panel">
+    <div class="ph">Robots <span class="ph-badge" id="robot-badge">0</span></div>
+    <div id="robot-scroll" class="panel-body">
+      <div class="empty">Waiting for robots…</div>
+    </div>
+
+    <div id="aisles-section">
+      <div class="ph" style="border-top:1px solid var(--border)">Aisles</div>
+      <div class="aisle-grid" id="aisle-grid">
+        <div class="aisle-cell"><div class="aisle-name">aisle_1</div><div class="aisle-st free">FREE</div></div>
+        <div class="aisle-cell"><div class="aisle-name">aisle_2</div><div class="aisle-st free">FREE</div></div>
+        <div class="aisle-cell"><div class="aisle-name">aisle_3</div><div class="aisle-st free">FREE</div></div>
+        <div class="aisle-cell"><div class="aisle-name">aisle_4</div><div class="aisle-st free">FREE</div></div>
+        <div class="aisle-cell"><div class="aisle-name">aisle_5</div><div class="aisle-st free">FREE</div></div>
+      </div>
+    </div>
+  </div>
+
+</div></div><div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════
+   STATE
+═══════════════════════════════════ */
+const S = {
+  robots: {},   
+  tasks:  [],   
+  aisles: {},   
+  ws:     null,
+};
+
+/* ════════════════════════════════════
+   MAP MATH - Corrected Base Scale
+   Wx: 0 maps to X: 60. Resolution: 62.5px per 1 meter.
+═══════════════════════════════════ */
+function svgX(wx) { return 60 + wx * 62.5; }
+function svgY(wy) { return 10 + (5 - wy) / 10 * 360; }
+
+/* ════════════════════════════════════
+   ROBOT COLORS
+═══════════════════════════════════ */
+const COLORS = ['#60a5fa','#34d399','#f472b6','#a78bfa','#fb923c','#38bdf8','#facc15','#86efac'];
+const colorMap = {};
+let colorIdx = 0;
+function robotColor(id) {
+  if (!colorMap[id]) colorMap[id] = COLORS[colorIdx++ % COLORS.length];
+  return colorMap[id];
+}
+
+/* ════════════════════════════════════
+   API & FETCH (No Polling Intervals!)
+═══════════════════════════════════ */
+function base() { return document.getElementById('server-url').value.replace(/\/$/, ''); }
+
+async function api(path, opts = {}) {
+  const r = await fetch(base() + path, opts);
+  if (r.status === 204) return null;
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+
+// Called EXACTLY ONCE on connect/reconnect to establish initial state.
+async function fetchAllInitialState() {
+  try {
+    const [robots, tasks, aisles] = await Promise.all([
+      api('/api/robots'), api('/api/tasks'), api('/api/aisles')
+    ]);
+    S.robots = {};
+    robots.forEach(r => S.robots[r.robot_id] = r);
+    S.tasks = tasks; // Keeps state perfect, fixes missing tasks bug
+    S.aisles = {};
+    aisles.forEach(a => S.aisles[a.aisle_id] = a);
+    
+    renderAll();
+  } catch(e) {
+    console.error("Initial fetch failed:", e);
+  }
+}
+
+async function submitTask() {
+  const aisle = +document.getElementById('f-aisle').value;
+  const shelf  = +document.getElementById('f-shelf').value;
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  try {
+    const t = await api('/api/tasks', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({aisle, shelf})
+    });
+    
+    // Add locally immediately
+    S.tasks.push(t);
+    renderTasks();
+    updateStats();
+    toast(`Task queued → A${aisle}/S${shelf}`, 'success');
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  } finally { btn.disabled = false; }
+}
+
+async function cancelTask(id) {
+  try {
+    await api('/api/tasks/' + id, {method: 'DELETE'});
+    const t = S.tasks.find(t => t.task_id === id);
+    if (t) { t.status = 'REJECTED'; t.updated_at = new Date().toISOString(); }
+    renderTasks();
+    updateStats();
+    toast('Task cancelled', 'info');
+  } catch(e) { toast('Cancel failed: ' + e.message, 'error'); }
+}
+
+/* ════════════════════════════════════
+   WEBSOCKET
+═══════════════════════════════════ */
+let wsReconnectTimer = null;
+
+function reconnect() { 
+  if (S.ws) S.ws.close(); 
+  else connectWS(); 
+}
+
+function connectWS() {
+  if (S.ws && (S.ws.readyState === WebSocket.OPEN || S.ws.readyState === WebSocket.CONNECTING)) return;
+  
+  setWS('connecting');
+  const url = base().replace(/^http/, 'ws') + '/ws';
+  try { S.ws = new WebSocket(url); } catch(_) { setWS('error'); return; }
+  
+  S.ws.onopen  = () => { 
+    setWS('connected'); 
+    fetchAllInitialState(); 
+  };
+  
+  S.ws.onclose = () => { 
+    setWS('disconnected'); 
+    S.ws = null;
+    clearTimeout(wsReconnectTimer);
+    wsReconnectTimer = setTimeout(connectWS, 3000); 
+  };
+  
+  S.ws.onerror = () => setWS('error');
+  
+  S.ws.onmessage = e => {
+    try { onWsMsg(JSON.parse(e.data)); } catch(_) {}
+  };
+}
+
+function onWsMsg({type, data}) {
+  if (type === 'robot_heartbeat') {
+    if (!S.robots[data.robot_id]) {
+      S.robots[data.robot_id] = {
+        robot_id: data.robot_id, 
+        status: data.task_id ? 'BUSY' : 'ONLINE',
+        pose: data.pose, active_task_id: data.task_id,
+        last_heartbeat: new Date().toISOString(),
+        registered_at: new Date().toISOString()
+      };
+    } else {
+      S.robots[data.robot_id].pose = data.pose;
+      S.robots[data.robot_id].active_task_id = data.task_id;
+      S.robots[data.robot_id].last_heartbeat = new Date().toISOString();
+      
+      // FIX: Ensure UI robot status reflects the heartbeat payload
+      if (S.robots[data.robot_id].status !== 'OFFLINE') {
+          S.robots[data.robot_id].status = data.task_id ? 'BUSY' : 'IDLE';
+      }
+    }
+    renderRobotCard(S.robots[data.robot_id]);
+    renderRobotOnMap(data.robot_id);
+    updateStats();
+  }
+  else if (type === 'task_status') {
+    let t = S.tasks.find(x => x.task_id === data.task_id);
+    
+    // If the UI somehow missed a task creation, fetch it explicitly
+    if (!t) {
+      api('/api/tasks/' + data.task_id).then(newTask => {
+         if (newTask && !S.tasks.find(x => x.task_id === data.task_id)) {
+             S.tasks.push(newTask);
+             renderTasks(); updateStats(); highlightActiveShelf();
+         }
+      }).catch(err => console.log(err));
+    } else {
+      t.status = data.status; 
+      if (data.robot_id) t.robot_id = data.robot_id;
+      t.updated_at = new Date().toISOString();
+    }
+    
+    if (S.robots[data.robot_id]) {
+      S.robots[data.robot_id].status =
+        data.status === 'IN_PROGRESS' ? 'BUSY' :
+        (data.status === 'DONE' || data.status === 'REJECTED') ? 'IDLE' :
+        S.robots[data.robot_id].status;
+      renderRobotCard(S.robots[data.robot_id]);
+    }
+    renderTasks(); updateStats();
+    highlightActiveShelf();
+  }
+  else if (type === 'aisle_request') {
+    S.aisles[data.aisle_id] = {aisle_id: data.aisle_id, locked: true, owner_robot_id: data.robot_id};
+    renderAisles(); setAisleBand(data.aisle_id, true);
+  }
+  else if (type === 'aisle_release') {
+    if (S.aisles[data.aisle_id]) {
+      S.aisles[data.aisle_id].locked = false;
+      S.aisles[data.aisle_id].owner_robot_id = null;
+    }
+    renderAisles(); setAisleBand(data.aisle_id, false);
+  }
+}
+
+function setWS(s) {
+  const dot = document.getElementById('ws-dot');
+  const lbl = document.getElementById('ws-lbl');
+  dot.className = 'ws-dot ' + s;
+  lbl.textContent = s.toUpperCase().replace('-', ' ');
+}
+
+/* ════════════════════════════════════
+   RENDER ENGINE
+═══════════════════════════════════ */
+function renderAll() {
+  renderRobots(); renderTasks(); renderAisles(); renderMap(); updateStats();
+}
+
+function renderRobots() {
+  const list = document.getElementById('robot-scroll');
+  const robots = Object.values(S.robots).sort((a,b) => a.robot_id.localeCompare(b.robot_id));
+  document.getElementById('robot-badge').textContent = robots.length;
+  if (!robots.length) { list.innerHTML = '<div class="empty">Waiting for robots…</div>'; return; }
+  list.innerHTML = robots.map(robotCardHTML).join('');
+}
+
+function renderRobotCard(r) {
+  const existing = document.getElementById('rc-' + r.robot_id);
+  if (!existing) { renderRobots(); return; }
+  existing.outerHTML = robotCardHTML(r);
+}
+
+function robotCardHTML(r) {
+  const c = robotColor(r.robot_id);
+  const statusColor = {IDLE:getVar('green'),BUSY:getVar('yellow'),ONLINE:getVar('blue'),OFFLINE:getVar('text-dim')}[r.status] || getVar('text-dim');
+  const px  = r.pose ? r.pose.x.toFixed(2) : '—';
+  const py  = r.pose ? r.pose.y.toFixed(2) : '—';
+  const pth = r.pose ? Math.round(r.pose.theta * 180 / Math.PI) + '°' : '—';
+  const hb  = r.last_heartbeat ? new Date(r.last_heartbeat).toLocaleTimeString('en',{hour12:false}) : '—';
+  const busyAnim = r.status === 'BUSY' ? 'animation:blink-busy 1.5s infinite' : '';
+  return `<div class="rcard" id="rc-${r.robot_id}">
+    <div class="rcard-top">
+      <div class="rdot" style="background:${c};opacity:${r.status==='OFFLINE'?.3:1};${busyAnim}"></div>
+      <div class="rname" style="color:${c}">${r.robot_id}</div>
+      <div class="rstatus ${r.status}">${r.status}</div>
+    </div>
+    <div class="rdata">
+      <div class="rdata-item"><div class="rdata-lbl">X</div><div class="rdata-val">${px}</div></div>
+      <div class="rdata-item"><div class="rdata-lbl">Y</div><div class="rdata-val">${py}</div></div>
+      <div class="rdata-item"><div class="rdata-lbl">θ</div><div class="rdata-val">${pth}</div></div>
+      <div class="rdata-item"><div class="rdata-lbl">HB</div><div class="rdata-val" style="font-size:9px">${hb}</div></div>
+    </div>
+    ${r.active_task_id ? `<div class="rtask-bar"><span class="rtask-txt">${r.active_task_id}</span></div>` : ''}
+  </div>`;
+}
+
+function renderTasks() {
+  const container = document.getElementById('task-list');
+
+  // Newest first within each section
+  const allTasks = [...S.tasks].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const pendingTasks    = allTasks.filter(t => t.status === 'PENDING');
+  const inProgressTasks = allTasks.filter(t => t.status === 'IN_PROGRESS');
+  const doneTasks       = allTasks.filter(t => t.status === 'DONE' || t.status === 'REJECTED');
+
+  // Badge shows active work: pending + in-progress
+  document.getElementById('task-badge').textContent = pendingTasks.length + inProgressTasks.length;
+
+  // ── PENDING ──────────────────────────────────────────
+  let html = `<div class="section-header sh-pending">
+    <span class="sh-dot" style="background:var(--blue)"></span>
+    Pending
+    <span class="sh-count">${pendingTasks.length}</span>
+  </div>`;
+  html += pendingTasks.length
+    ? pendingTasks.map(taskItemHTML).join('')
+    : `<div class="empty" style="padding:14px">No pending tasks</div>`;
+
+  // ── IN PROGRESS ──────────────────────────────────────
+  html += `<div class="section-header sh-progress">
+    <span class="sh-dot" style="background:var(--yellow)"></span>
+    In Progress
+    <span class="sh-count">${inProgressTasks.length}</span>
+  </div>`;
+  html += inProgressTasks.length
+    ? inProgressTasks.map(taskItemHTML).join('')
+    : `<div class="empty" style="padding:14px">No tasks in progress</div>`;
+
+  // ── COMPLETED ─────────────────────────────────────────
+  html += `<div class="section-header sh-completed">
+    <span class="sh-dot" style="background:var(--green)"></span>
+    Completed
+    <span class="sh-count">${doneTasks.length}</span>
+  </div>`;
+  html += doneTasks.length
+    ? doneTasks.map(taskItemHTML).join('')
+    : `<div class="empty" style="padding:14px">No completed tasks</div>`;
+
+  container.innerHTML = html;
+}
+
+function taskItemHTML(t) {
+  const ts = new Date(t.created_at).toLocaleTimeString('en',{hour12:false});
+  return `<div class="task-item fade-in">
+    <div class="task-header">
+      <span class="task-id">#${t.task_id}</span>
+      <span class="badge ${t.status}">${t.status.replace('_',' ')}</span>
+      ${t.status === 'PENDING' ? `<button class="cancel-btn" onclick="cancelTask('${t.task_id}')">✕</button>` : ''}
+    </div>
+    <div class="task-info-row">
+      <span class="task-loc">Aisle ${t.aisle} / Shelf ${t.shelf}</span>
+      ${t.robot_id ? `<span class="task-robot">→ ${t.robot_id}</span>` : ''}
+      <span class="task-time">${ts}</span>
+    </div>
+  </div>`;
+}
+
+function renderAisles() {
+  const grid = document.getElementById('aisle-grid');
+  const aisles = [1,2,3,4,5].map(i => {
+    const a = S.aisles['aisle_'+i] || {aisle_id:'aisle_'+i, locked:false, owner_robot_id:null};
+    return `<div class="aisle-cell ${a.locked?'locked':''}">
+      <div class="aisle-name">aisle_${i}</div>
+      <div class="aisle-st ${a.locked?'locked':'free'}">${a.locked?'LOCKED':'FREE'}</div>
+      ${a.owner_robot_id ? `<div class="aisle-owner">${a.owner_robot_id}</div>` : ''}
+    </div>`;
+  });
+  grid.innerHTML = aisles.join('');
+}
+
+/* ════════════════════════════════════
+   MAP RENDERING
+═══════════════════════════════════ */
+function renderMap() {
+  Object.keys(S.robots).forEach(renderRobotOnMap);
+  Object.values(S.aisles).forEach(a => setAisleBand(a.aisle_id, a.locked));
+  highlightActiveShelf();
+}
+
+function renderRobotOnMap(robotId) {
+  const r = S.robots[robotId];
+  if (!r || !r.pose) return;
+  const layer = document.getElementById('robots-layer');
+  const c = robotColor(robotId);
+  const rx = svgX(r.pose.x), ry = svgY(r.pose.y);
+  const theta = r.pose.theta || 0;
+  const arrowLen = 16;
+  const ax = rx + Math.cos(theta) * arrowLen;
+  const ay = ry - Math.sin(theta) * arrowLen;
+  const offline = r.status === 'OFFLINE';
+
+  let g = document.getElementById('rm-' + robotId);
+  if (!g) {
+    g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.id = 'rm-' + robotId;
+    layer.appendChild(g);
+  }
+  g.innerHTML = `
+    <circle cx="${rx.toFixed(1)}" cy="${ry.toFixed(1)}" r="12"
+      fill="${c}" fill-opacity="${offline?.12:.2}"
+      stroke="${c}" stroke-width="${offline?.8:1.5}" stroke-opacity="${offline?.3:.9}"/>
+    ${!offline ? `
+      <line x1="${rx.toFixed(1)}" y1="${ry.toFixed(1)}" x2="${ax.toFixed(1)}" y2="${ay.toFixed(1)}"
+        stroke="${c}" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+      <circle cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="2.5" fill="${c}" opacity=".9"/>
+    ` : ''}
+    <text x="${(rx+15).toFixed(1)}" y="${(ry+4).toFixed(1)}"
+      font-family="Share Tech Mono" font-size="9" fill="${c}" opacity="${offline?.4:.95}"
+    >${robotId}</text>
+  `;
+}
+
+function setAisleBand(aisleId, locked) {
+  const n = parseInt(aisleId.replace('aisle_',''));
+  if (isNaN(n)) return;
+  const el = document.getElementById('ab-'+n);
+  if (!el) return;
+  if (locked) {
+    el.setAttribute('fill','rgba(234,179,8,.1)');
+    el.setAttribute('stroke','rgba(234,179,8,.35)');
+    el.setAttribute('stroke-width','.6');
+  } else {
+    el.setAttribute('fill','rgba(96,165,250,.04)');
+    el.setAttribute('stroke','none');
+  }
+}
+
+function highlightActiveShelf() {
+  document.querySelectorAll('[id^="sh-"]').forEach(el => {
+    el.setAttribute('fill','rgba(25,50,110,.7)');
+    el.setAttribute('stroke','rgba(96,165,250,.35)');
+    el.setAttribute('stroke-width','.7');
+  });
+  
+  S.tasks.filter(t => t.status === 'IN_PROGRESS').forEach(t => {
+    const el = document.getElementById(`sh-${t.aisle}-${t.shelf}`);
+    if (!el) return;
+    const color = t.robot_id ? robotColor(t.robot_id) : '#eab308';
+    el.setAttribute('fill','rgba(234,179,8,.2)');
+    el.setAttribute('stroke',color);
+    el.setAttribute('stroke-width','1.2');
+  });
+}
+
+/* ════════════════════════════════════
+   STATS + HELPERS
+═══════════════════════════════════ */
+function updateStats() {
+  const robots = Object.values(S.robots);
+  const tasks  = S.tasks;
+  document.getElementById('st-online').textContent = robots.filter(r=>r.status!=='OFFLINE').length;
+  document.getElementById('st-busy').textContent   = robots.filter(r=>r.status==='BUSY').length;
+  document.getElementById('st-queue').textContent  = tasks.filter(t=>t.status==='PENDING').length;
+  document.getElementById('st-done').textContent   = tasks.filter(t=>t.status==='DONE').length;
+}
+
+let toastTimer;
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3000);
+}
+
+function getVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue('--'+name).trim();
+}
+
+/* ════════════════════════════════════
+   INIT
+═══════════════════════════════════ */
+connectWS();
+</script>
+</body>
+</html>
