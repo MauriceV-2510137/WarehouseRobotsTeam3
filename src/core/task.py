@@ -4,11 +4,11 @@ from enum import Enum, auto
 class TaskAlreadyAssignedError(Exception):
     pass
 
-class TaskStatus(Enum):
-    PENDING = auto()
-    IN_PROGRESS = auto()
-    DONE = auto()
-    REJECTED = auto()
+class TaskStatus(str, Enum):
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    DONE = "DONE"
+    REJECTED = "REJECTED"
 
 @dataclass
 class Task:
