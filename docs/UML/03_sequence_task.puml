@@ -1,0 +1,44 @@
+@startuml 03_sequence_task
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam SequenceArrowColor #2E75B6
+skinparam SequenceLifeLineBorderColor #2E75B6
+skinparam SequenceParticipantBorderColor #2E75B6
+skinparam SequenceParticipantBackgroundColor #EEF4FB
+skinparam SequenceParticipantFontColor #1F4E79
+skinparam ActorBorderColor #2E75B6
+skinparam ActorBackgroundColor #EEF4FB
+skinparam ActorFontColor #1F4E79
+
+actor Operator
+participant "Web UI" as UI
+participant "FastAPI" as API
+participant "TaskDispatcher" as TD
+participant "AisleManager" as AM
+participant "Robot" as R
+
+Operator -> UI  : submit task\n(aisle + shelf)
+UI       -> API : POST /api/tasks
+API      -> TD  : enqueue(task)
+
+TD       -> R   : MQTT task/assign\n{aisle_pos, segment_pos}
+R        -> AM  : MQTT aisle/{id}/request
+
+AM       -> R   : MQTT robot/{id}/aisle/response\n{granted: true}
+
+R        -> API : MQTT task/status\n{IN_PROGRESS}
+API      -> UI  : WebSocket task_status
+
+group Navigate → Pick → Return
+  R -> R : MOVE_TO_AISLE
+  R -> R : MOVE_TO_SEGMENT
+  R -> R : PICK_ITEM (5–10 s)
+  R -> R : MOVE_BACK_TO_AISLE
+end
+
+R   -> AM  : MQTT aisle/{id}/release
+R   -> API : MQTT task/status {DONE}
+API -> UI  : WebSocket task_status DONE
+
+@enduml

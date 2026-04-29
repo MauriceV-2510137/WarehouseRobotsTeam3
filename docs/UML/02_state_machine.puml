@@ -1,0 +1,30 @@
+@startuml 02_state_machine
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam StateBackgroundColor #EEF4FB
+skinparam StateBorderColor #2E75B6
+skinparam StateArrowColor #2E75B6
+skinparam StateFontColor #1F4E79
+
+[*] --> WAIT_CONNECTION
+
+WAIT_CONNECTION --> IDLE                  : connected
+
+IDLE --> WAIT_FOR_AISLE_ACCESS            : TaskReceived\n+ aisle requested
+
+WAIT_FOR_AISLE_ACCESS --> MOVE_TO_AISLE  : lock granted
+WAIT_FOR_AISLE_ACCESS --> WAIT_FOR_AISLE_ACCESS : lock denied\n(retry)
+
+MOVE_TO_AISLE --> MOVE_TO_SEGMENT        : arrived at entry
+
+MOVE_TO_SEGMENT --> PICK_ITEM            : arrived at shelf
+
+PICK_ITEM --> MOVE_BACK_TO_AISLE         : pickup done (5–10 s)
+
+MOVE_BACK_TO_AISLE --> MOVE_TO_BASE      : arrived at entry
+MOVE_BACK_TO_AISLE --> MOVE_BACK_TO_AISLE : lock lost → stop in place\n(no retry)
+
+MOVE_TO_BASE --> IDLE                    : DONE published\nlock released
+
+@enduml

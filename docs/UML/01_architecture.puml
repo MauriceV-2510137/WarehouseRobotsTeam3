@@ -1,0 +1,55 @@
+@startuml 01_architecture
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #2E75B6
+skinparam PackageBorderColor #2E75B6
+skinparam PackageFontColor #1F4E79
+skinparam ComponentBorderColor #2E75B6
+skinparam InterfaceBorderColor #2E75B6
+skinparam DatabaseBorderColor #888888
+
+package "Robot  (src/)" {
+  component [StateMachine]
+  component [Navigator]
+  component [CollisionManager]
+  component [OdometryEstimator]
+  component [EventQueue]
+  interface "IMotionController" as IMC
+  interface "ISensorsController" as ISC
+  interface "IRobotComm" as IRC
+  [StateMachine] --> IMC
+  [StateMachine] --> ISC
+  [StateMachine] --> IRC
+  [EventQueue] -r-> [StateMachine] : events
+}
+
+package "Server  (server/)" {
+  component [TaskDispatcher]
+  component [AisleManager]
+  component [RobotTracker]
+  component [TaskStore]
+  component [FastAPI / REST]
+  component [WebSocket]
+  [TaskDispatcher] --> [TaskStore]
+  [RobotTracker] --> [TaskStore]
+}
+
+package "Web Interface  (webapp/)" {
+  component [Browser SPA]
+}
+
+database "MQTT Broker" as MQTT
+
+[Browser SPA] --> [FastAPI / REST] : HTTP REST
+[Browser SPA] --> [WebSocket]      : WebSocket (server-push)
+
+IRC      --> MQTT : publish / subscribe\n(QoS = 1)
+MQTT     --> [RobotTracker]   : heartbeat
+MQTT     --> [AisleManager]   : aisle/request\naisle/release
+MQTT     --> [TaskStore]      : task/status
+[TaskDispatcher] --> MQTT     : task/assign\naisle/response
+[AisleManager]   --> MQTT     : aisle/response
+
+@enduml

@@ -1,0 +1,91 @@
+@startuml 04_class_interfaces
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam ClassBorderColor #2E75B6
+skinparam ClassBackgroundColor #EEF4FB
+skinparam ClassFontColor #1F4E79
+skinparam ClassHeaderBackgroundColor #2E75B6
+skinparam ClassHeaderFontColor white
+skinparam ArrowColor #2E75B6
+skinparam InterfaceBorderColor #1F4E79
+skinparam InterfaceBackgroundColor #FFFFFF
+
+interface IMotionController {
+  + move(linear: float, angular: float)
+  + stop()
+}
+
+interface ISensorsController {
+  + get_scan() : list[float]
+  + get_front_distance() : float
+  + get_left_distance() : float
+  + get_right_distance() : float
+  + get_rear_distance() : float
+  + get_yaw() : float
+  + get_gyro() : list
+  + get_accelerometer() : list
+  + get_wheel_positions() : tuple
+}
+
+interface IRobotComm {
+  + connect()
+  + publish_heartbeat(pose, task_id)
+  + publish_task_status(task_id, status)
+  + request_aisle(aisle_id, task_id)
+  + release_aisle(aisle_id)
+}
+
+interface IRobotState {
+  + on_enter(robot) : None
+  + on_exit(robot) : None
+  + update(robot, dt: float) : TransitionID
+  + on_event(robot, event) : None
+}
+
+class Robot {
+  - motion : IMotionController
+  - sensors : ISensorsController
+  - comm : IRobotComm
+  - state_machine : StateMachine
+  - collision : CollisionManager
+  + update(dt: float)
+}
+
+class WebotsHardware {
+  + set_wheel_velocity(left, right)
+  + get_lidar_scan() : list
+  + get_yaw() : float
+  + get_gyro() : list
+  + get_accelerometer() : list
+  + get_wheel_positions() : tuple
+}
+
+class RobotFactory {
+  + build_webot_robot() : Robot
+}
+
+class WebotsMotionController
+class WebotsSensorsController
+class MQTTRobotComm
+
+Robot o--> IMotionController
+Robot o--> ISensorsController
+Robot o--> IRobotComm
+Robot *--> "state_machine" IRobotState
+
+WebotsMotionController ..|> IMotionController
+WebotsSensorsController ..|> ISensorsController
+MQTTRobotComm           ..|> IRobotComm
+
+WebotsMotionController  --> WebotsHardware : hardware
+WebotsSensorsController --> WebotsHardware : hardware
+
+RobotFactory ..> WebotsHardware         : creates
+RobotFactory ..> WebotsMotionController : injects
+RobotFactory ..> WebotsSensorsController : injects
+RobotFactory ..> MQTTRobotComm          : injects
+RobotFactory ..> Robot                  : creates
+
+@enduml
