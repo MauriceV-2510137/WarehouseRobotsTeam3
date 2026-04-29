@@ -77,15 +77,19 @@ class Server:
     # LOGIC
     # -------------------------
     def _on_heartbeat(self, event: HeartbeatEvent) -> None:
+        return
         print(f"[{event.robot_id}] pose = {event.pose}")
 
     def _on_task_status(self, event: TaskStatusEvent) -> None:
+        return
         print(f"[{event.robot_id}] task = {event.task_id} -> {event.status}")
 
     def _on_aisle_request(self, event: AisleRequestEvent) -> None:
+        return
         print(f"[{event.robot_id}] aisle requested = {event.aisle_id}")
 
     def _on_aisle_release(self, event: AisleReleaseEvent) -> None:
+        return
         print(f"[{event.robot_id}] aisle released = {event.aisle_id}")
 
     # -------------------------
