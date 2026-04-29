@@ -2,7 +2,7 @@
 
 Autonomous warehouse robot system developed for the course **Software Engineering for Cyber-Physical Systems (2025–2026)**.
 
-**Team:** Jelle Claes · Nesim Dauwen · Maurice Vandenheede
+**Team:** Jelle Claes · Maurice Vandenheede
 
 ---
 
