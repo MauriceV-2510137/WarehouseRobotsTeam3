@@ -18,6 +18,7 @@ class MovingToBaseState(IRobotState):
     def update(self, robot, dt: float) -> TransitionID:
 
         linear, angular = robot.navigator.compute(robot.pose)
+        linear, angular = robot.collision.apply(linear, angular, dt)
         robot.motion.move(linear, angular)
 
         if robot.navigator.reached_target():

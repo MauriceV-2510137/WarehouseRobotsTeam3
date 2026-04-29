@@ -75,7 +75,6 @@ class WebotsHardware:
     # Actuators
     # -------------------------------------------------------------------
     def set_wheel_velocity(self, left: float, right: float) -> None:
-        """Set wheel angular velocities in rad/s."""
         self.left_motor.setVelocity(left)
         self.right_motor.setVelocity(right)
 
@@ -83,21 +82,9 @@ class WebotsHardware:
     # LiDAR
     # -------------------------------------------------------------------
     def get_lidar_scan(self) -> list:
-        """
-        Returns the flat list of range values (metres) for one 360 degree sweep.
-
-        Scan layout (Webots R2025a, Z-up, LDS-01):
-            index 0       = directly forward  (+X)
-            index n//4    = left              (+Y)   90 deg CCW
-            index n//2    = backward          (-X)  180 deg
-            index 3*n//4  = right             (-Y)  270 deg CCW
-
-        Values may be float('inf') when no return is detected within range.
-        """
         return self.lidar.getRangeImage()
 
     def get_lidar_meta(self) -> dict:
-        """Returns static lidar parameters. Call once and cache the result."""
         return {
             "fov":                   self.lidar.getFov(),
             "horizontal_resolution": self.lidar.getHorizontalResolution(),
@@ -116,25 +103,15 @@ class WebotsHardware:
     # IMU sensors
     # -------------------------------------------------------------------
     def get_gyro(self) -> list:
-        """
-        Returns [wx, wy, wz] angular velocity in rad/s in the robot's local frame.
-        For a flat Z-up robot, wz is the yaw rate (positive = CCW = turning left).
-        """
         return self.gyro.getValues()
 
     def get_accelerometer(self) -> list:
-        """Returns [ax, ay, az] linear acceleration in m/s2 (robot local frame)."""
         return self.accelerometer.getValues()
 
     # -------------------------------------------------------------------
     # Wheel encoders
     # -------------------------------------------------------------------
     def get_wheel_positions(self) -> tuple:
-        """
-        Returns (left_rad, right_rad) -- cumulative wheel angle in radians
-        since simulation start.  Multiply by wheel_radius to get arc length.
-        Values increase positively when the wheel rolls forward.
-        """
         return (
             self.left_encoder.getValue(),
             self.right_encoder.getValue(),

@@ -1,43 +1,23 @@
 from interfaces.motion_controller import IMotionController
 
-
 class WebotsMotionController(IMotionController):
-
     def __init__(self, hardware) -> None:
         self.hardware = hardware
-        self.model = hardware.model
+        self.model    = hardware.model
 
     def move(self, linear: float, angular: float) -> None:
-
-        robot = self.hardware.robot
-        collision = getattr(robot, "collision", None)
-
-        if collision:
-            state = collision.get_state()
-
-            if state.name == "STOP":
-                self.stop()
-                return
-
-            if state.name == "YIELD":
-                linear *= 0.25
-                angular *= 0.4
-
-                if linear > 0:
-                    linear = min(linear, 0.03)
-
         r = self.model.wheel_radius
         L = self.model.wheel_base
 
-        v_left = (linear - angular * L / 2.0) / r
+        v_left  = (linear - angular * L / 2.0) / r
         v_right = (linear + angular * L / 2.0) / r
 
         max_speed = self.model.max_wheel_speed
-        max_val = max(abs(v_left), abs(v_right))
+        max_val   = max(abs(v_left), abs(v_right))
 
         if max_val > max_speed:
-            scale = max_speed / max_val
-            v_left *= scale
+            scale    = max_speed / max_val
+            v_left  *= scale
             v_right *= scale
 
         self.hardware.set_wheel_velocity(v_left, v_right)

@@ -49,24 +49,22 @@ class WebotsSensorsController(ISensorsController):
         return self._clean_scan(self.get_scan())
 
     # -------------------------
-    # SEMANTIC DISTANCES (stable API)
+    # SEMANTIC DISTANCES
     # -------------------------
+    def _distance_at(self, center_fraction: float) -> float:
+        scan = self._scan()
+        n = len(scan)
+        center = round(center_fraction * n) % n
+        return self._sector_min(scan, center, n // 24)
+
     def get_front_distance(self) -> float:
-        scan = self._scan()
-        n = len(scan)
-        return self._sector_min(scan, 0, n // 24)
-
-    def get_left_distance(self) -> float:
-        scan = self._scan()
-        n = len(scan)
-        return self._sector_min(scan, n // 4, n // 24)
-
-    def get_right_distance(self) -> float:
-        scan = self._scan()
-        n = len(scan)
-        return self._sector_min(scan, 3 * n // 4, n // 24)
+        return self._distance_at(0.5)
 
     def get_rear_distance(self) -> float:
-        scan = self._scan()
-        n = len(scan)
-        return self._sector_min(scan, n // 2, n // 24)
+        return self._distance_at(0.0)
+
+    def get_left_distance(self) -> float:
+        return self._distance_at(0.75)
+
+    def get_right_distance(self) -> float:
+        return self._distance_at(0.25)

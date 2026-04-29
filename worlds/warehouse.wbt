@@ -10,8 +10,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation -0.008858376975831387 -0.9964639364158729 0.08355329185578031 5.875701423835132
-  position -14.975780186649974 0.22673036334452035 8.021568357932061
+  orientation -0.010502849941695822 -0.9977015884687671 0.06694199362135071 5.775986399757626
+  position -15.576393200501812 0.2551830924561268 10.475692646629009
 }
 Background {
   skyColor [
@@ -163,6 +163,21 @@ TurtleBot3Burger {
   customData "0.0,-1.0,0.0"
 }
 Solid {
+  translation 5.5 3 0.3
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.7 0.7 0.8
+      }
+      geometry DEF AISLE_BOX_SHAPE Box {
+        size 3 1.5 0.6
+      }
+    }
+  ]
+  name "aisle_block_1"
+  boundingObject USE AISLE_BOX_SHAPE
+}
+Solid {
   translation 5.5 1 0.3
   children [
     Shape {
@@ -174,6 +189,7 @@ Solid {
       }
     }
   ]
+  name "aisle_block_2"
   boundingObject USE AISLE_BOX_SHAPE
 }
 Solid {
@@ -188,22 +204,7 @@ Solid {
       }
     }
   ]
-  name "solid(2)"
-  boundingObject USE AISLE_BOX_SHAPE
-}
-Solid {
-  translation 5.5 3 0.3
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.7 0.7 0.8
-      }
-      geometry DEF AISLE_BOX_SHAPE Box {
-        size 3 1.5 0.6
-      }
-    }
-  ]
-  name "solid(1)"
+  name "aisle_block_3"
   boundingObject USE AISLE_BOX_SHAPE
 }
 Solid {
@@ -218,6 +219,6 @@ Solid {
       }
     }
   ]
-  name "solid(3)"
+  name "aisle_block_4"
   boundingObject USE AISLE_BOX_SHAPE
 }

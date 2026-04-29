@@ -14,18 +14,8 @@ from interfaces.robot_comm import IRobotComm
 from interfaces.motion_controller import IMotionController
 from interfaces.sensors_controller import ISensorsController
 
-
 class Robot:
-
-    def __init__(
-        self,
-        motion: IMotionController,
-        sensors: ISensorsController,
-        comm: IRobotComm,
-        model: RobotModel,
-        initial_pose: Pose | None = None
-    ) -> None:
-
+    def __init__(self, motion: IMotionController, sensors: ISensorsController, comm: IRobotComm, model: RobotModel, initial_pose: Pose | None = None) -> None:
         self.motion = motion
         self.sensors = sensors
         self.comm = comm
@@ -42,11 +32,9 @@ class Robot:
         self.telemetry = TelemetryService(self)
 
         self.state_machine = StateMachine(self, initial_state=TransitionID.WAIT_CONNECTION)
-
         self.event_queue = EventQueue()
 
-        self.collision = CollisionManager(self.sensors, self)
-
+        self.collision = CollisionManager(self.sensors)
         self.aisle_lock_granted: bool = False
 
         self._bind_events()
@@ -56,26 +44,32 @@ class Robot:
     def priority(self) -> int:
         return hash(self.comm.robot_id) % 1000
 
+    # -----------------
+    # Events
+    # -----------------
     def _bind_events(self) -> None:
         self.comm.set_task_received_callback(self.event_queue.publish)
         self.comm.set_aisle_response_callback(self.event_queue.publish)
 
     def _setup_scheduler(self) -> None:
-        heartbeat_task = ScheduledTask(
-            interval_s=0.5,
-            callback=self.telemetry.publish_heartbeat
-        )
+        heartbeat_task = ScheduledTask(interval_s=0.5, callback=self.telemetry.publish_heartbeat)
         self.scheduler.add(heartbeat_task)
 
     def _process_events(self) -> None:
         for event in self.event_queue.poll_all():
             self.state_machine.handle_event(event)
 
+    # -----------------
+    # Pose
+    # -----------------
     def _update_pose(self) -> None:
         left_enc, right_enc = self.sensors.get_wheel_positions()
         heading = self.sensors.get_yaw()
         self.pose = self.odometry.update(left_enc, right_enc, true_heading=heading)
 
+    # -----------------
+    # Main loop
+    # -----------------
     def update(self, dt: float) -> None:
         self._update_pose()
         self._process_events()
