@@ -97,6 +97,12 @@ UML source diagrams (PlantUML) are in [`docs/UML/`](docs/UML/).
 
 ---
 
+## Tests
+
+A pytest test suite (69 tests) covering the Navigator, OdometryEstimator, CollisionManager, WarehouseMap, AisleManager, and TaskDispatcher is available on the [`tests`](https://github.com/MauriceV-2510137/WarehouseRobotsTeam3/tree/tests) branch. It was not merged into main due to time constraints before the deadline — we did not want to risk breaking anything.
+
+---
+
 ## Re-rendering UML Diagrams
 
 ```bash
