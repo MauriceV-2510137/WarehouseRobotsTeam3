@@ -83,7 +83,7 @@ Open `worlds/warehouse.wbt` in Webots. The robots connect automatically on start
 
 ## Architecture
 
-Full architecture documentation is available in [`docs/architecture.docx`](docs/architecture.docx).  
+Full architecture documentation is available in [`docs/architecture.pdf`](docs/architecture.pdf).  
 The presentation is available in [`docs/ArchitecturePresentation.pptx`](docs/ArchitecturePresentation.pptx).  
 UML source diagrams (PlantUML) are in [`docs/UML/`](docs/UML/).
 
